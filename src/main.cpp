@@ -2,7 +2,7 @@
 #include <iostream>
 #include "common.hpp"
 
-#include "raylib.h"
+#include "game.hpp"
 
 int main(void)
 {
@@ -15,13 +15,19 @@ int main(void)
     InitWindow(screenW, screenH, "DanmakuPRC");
     SetTargetFPS(60);
 
+    Game game = {};
+    game.Init();
+
     // Main game loop
     while (!WindowShouldClose())
     {
         // Update
+        game.Update();
 
         // Draw
         BeginDrawing();
+
+        game.Draw();
 
         EndDrawing();
     }
