@@ -1,6 +1,12 @@
 .etc/
-obj/debug/*
-obj/release/*
+bin/linux/debug/*
+bin/linux/release/*
+bin/windows/debug.*
+bin/windows/release.*
+obj/linux/debug/*
+obj/linux/release/*
+obj/windows/debug.*
+obj/windows/release.*
 build.sh
 RCT-debug
 RCT-release
