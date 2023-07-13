@@ -1,0 +1,8 @@
+.etc/
+obj/debug/*
+obj/release/*
+build.sh
+RCT-debug
+RCT-release
+README.md.backup
+setup.sh
