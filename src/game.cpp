@@ -1,39 +1,37 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+from common import *
 
-#include "game.hpp"
+from bullet import *
+from player import *
 
-Game::Game()
-{
-    srand(time(NULL));
+import math
+from pyray import *
+import random
 
-    player.x = 0;
-    player.y = 0;
-    player.size = 24;
-    bullet.x = rand() % screenW;
-    bullet.y = 0;
-    bullet.v_x = rand() % 10 - 5;
-    bullet.v_y = rand() % 5 * -1;
-    bullet.size = 12;
-};
+class Game:
+    random = random.seed()
+    bullet = Bullet()
+    player = Player()
 
-void Game::Init() { };
+    def __init__(self):
+        self.player.x = 0
+        self.player.y = 0
+        self.player.size = 24
+        self.bullet.x = random.randint(0, screenW - 1)
+        self.bullet.y = 0
+        self.bullet.v_x = random.randint(-1, 1)
+        self.bullet.v_y = random.randint(0, 8)
+        self.bullet.size = 12
 
-void Game::Update()
-{
-    bullet.x += bullet.v_x;
-    bullet.y += bullet.v_y;
+    def Update(self):
+        self.bullet.x += self.bullet.v_x
+        self.bullet.y += self.bullet.v_y
 
-    if (IsKeyDown(KEY_UP)) { player.y -= (player.y < 8) ? 0 : 8; }
-    if (IsKeyDown(KEY_DOWN)) { player.y += (player.y > screenH - 8) ? 0 : 8; }
-    if (IsKeyDown(KEY_LEFT)) { player.x -= (player.x < 8) ? 0 : 8; }
-    if (IsKeyDown(KEY_RIGHT)) { player.x += (player.x > screenW - 8) ? 0 : 8; }
-};
+        if (is_key_down(KEY_UP)): self.player.y -= min(self.player.y, 12)
+        if (is_key_down(KEY_DOWN)): self.player.y += min(screenH - self.player.y - self.player.size, 12)
+        if (is_key_down(KEY_LEFT)): self.player.x -= min(self.player.x, 12)
+        if (is_key_down(KEY_RIGHT)): self.player.x += min(screenW - self.player.x - self.player.size, 12)
 
-void Game::Draw()
-{
-    ClearBackground(BLACK);
-    DrawRectangle(player.x - (player.size - 2), player.y - (player.size - 2), player.size, player.size, WHITE);
-    DrawRectangle(bullet.x - (bullet.size / 2), bullet.y - (bullet.size / 2), bullet.size, bullet.size, RED);
-};
+    def Draw(self):
+        clear_background(BLACK)
+        draw_rectangle(self.player.x, self.player.y, self.player.size, self.player.size, WHITE)
+        draw_rectangle(self.bullet.x, self.bullet.y, self.bullet.size, self.bullet.size, RED)

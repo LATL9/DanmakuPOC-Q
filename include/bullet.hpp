@@ -1,9 +1,8 @@
-typedef struct bullet
-{
-    unsigned int x;
-    unsigned int y;
-    int v_x;
-    int v_y;
-    unsigned int size;
-} Bullet;
+class Bullet:
+    x = 0
+    y = 0
+    v_x = 0
+    v_y = 0
+    size = 48
 
+    def __init__(self): pass

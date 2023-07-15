@@ -1,4 +1,2 @@
-#include <stdlib.h>
-#include <array>
-
-#include "common.hpp"
+screenW = 800
+screenH = 540

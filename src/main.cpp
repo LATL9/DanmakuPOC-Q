@@ -1,41 +1,31 @@
-#include <stdlib.h>
-#include <iostream>
-#include "common.hpp"
+from common import *
 
-#include "game.hpp"
+from game import *
 
-int main(void)
-{
-    // Initialization
-    int screenWidth = 800;
-    int screenHeight = 540;
-    screenW = screenWidth;
-    screenH = screenHeight;
+from pyray import *
 
-    InitWindow(screenW, screenH, "DanmakuPRC");
-    SetTargetFPS(60);
+def main():
+    # Initialization
+    init_window(screenW, screenH, "DanmakuPRC")
+    set_target_fps(60)
 
-    Game game = {};
-    game.Init();
+    game = Game()
 
-    // Main game loop
-    while (!WindowShouldClose())
-    {
-        // Update
-        game.Update();
+    # Main game loop
+    while not window_should_close():
+        # Update
+        game.Update()
 
-        // Draw
-        BeginDrawing();
+        # Draw
+        begin_drawing()
 
-        game.Draw();
+        game.Draw()
 
-        EndDrawing();
-    }
+        end_drawing()
 
-    // De-Initialization
-    CloseWindow();
+    # De-Initialization
+    close_window()
 
-    return 0;
-}
+    return 0
 
-
+main()

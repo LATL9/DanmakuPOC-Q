@@ -1,6 +1,6 @@
-typedef struct player
-{
-    unsigned int x;
-    unsigned int y;
-    unsigned int size;
-} Player;
+class Player:
+    x = 0
+    y = 0
+    size = 48
+
+    def __init__(self): pass
