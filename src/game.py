@@ -44,7 +44,7 @@ class Game:
         self.score = 0
         return score
     
-    def Update(self):
+    def Update(self, keys):
         self.colliding = [False for i in range(len(self.colliding))]
         
         for i in range(len(self.invinsible_count)):
@@ -52,7 +52,7 @@ class Game:
                 self.invinsible_count[i] += 1
                 if self.invinsible_count[i] == 61: self.invinsible_count[i] = -1
             
-        self.player.Update()
+        self.player.Update(keys)
         for i in range(len(self.bullets)): 
             self.bullets[i].Update()
             if self.bullets[i].pos.x <= self.bullets[i].pos.width * -1 or \

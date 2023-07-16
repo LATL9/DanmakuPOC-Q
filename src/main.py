@@ -14,7 +14,7 @@ def main():
     # Main game loop
     while not window_should_close():
         # Update
-        game.Update()
+        game.Update([bool(random.getrandbits(1)) for i in range(4)])
         if is_key_pressed(KEY_R): print(game.Reset())
 
         # Draw

@@ -9,11 +9,12 @@ class Player:
     def __init__(self, x, y, size):
         self.pos = Rectangle(x, y, size, size)
 
-    def Update(self):
-        if is_key_down(KEY_UP): self.pos.y -= min(self.pos.y, 8)
-        if is_key_down(KEY_DOWN): self.pos.y += min(HEIGHT - self.pos.y - self.pos.height, 8)
-        if is_key_down(KEY_LEFT): self.pos.x -= min(self.pos.x, 8)
-        if is_key_down(KEY_RIGHT): self.pos.x += min(WIDTH - self.pos.x - self.pos.width, 8)
+    # keys: 0 = up, 1 = down, 2 = left, 3 = right
+    def Update(self, keys):
+        if keys[0]: self.pos.y -= min(self.pos.y, 8)
+        if keys[1]: self.pos.y += min(HEIGHT - self.pos.y - self.pos.height, 8)
+        if keys[2]: self.pos.x -= min(self.pos.x, 8)
+        if keys[3]: self.pos.x += min(WIDTH - self.pos.x - self.pos.width, 8)
 
     def Draw(self):
         draw_rectangle_rec(Rectangle(
