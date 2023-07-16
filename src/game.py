@@ -12,9 +12,9 @@ class Game:
     bullets = []
     player = Player(-1, -1, -1)
     score = 0
-    colliding = False
-    still_colliding = False
-    invinsible_count = -1 # -1 = not invinsible, 0-59 = invinsible frame (60 is end)
+    colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
+    still_colliding = [False, False, False]
+    invinsible_count = [-1, -1, -1] # -1 = not invinsible, 0-59 = invinsible frame (60 is end)
 
     def __init__(self):
         self.bullets = [
@@ -30,10 +30,12 @@ class Game:
         self.score = 0
 
     def Update(self):
-        collide = False
-        if self.invinsible_count != -1:
-            self.invinsible_count += 1
-            if self.invinsible_count == 61: self.invinsible_count = -1
+        self.colliding = [False for i in range(len(self.colliding))]
+        
+        for i in range(len(self.invinsible_count)):
+            if self.invinsible_count[i] != -1:
+                self.invinsible_count[i] += 1
+                if self.invinsible_count[i] == 61: self.invinsible_count[i] = -1
             
         self.player.Update()
         for i in range(len(self.bullets)): 
@@ -49,20 +51,31 @@ class Game:
                         round((random.randint(0, 1) - 0.5) * 2) * random.randint(1, 4),
                         random.randint(1, 8)
                     )
-            if self.invinsible_count == -1 and \
-                get_collision_rec(self.player.pos, self.bullets[i].pos).width != 0:
-                if self.colliding: self.still_colliding = True
-                self.colliding = True
-                collide = True        
-        if not collide: self.colliding = False
+            if get_collision_rec(Rectangle(
+                self.player.pos.x - round(self.player.pos.width * 2),
+                self.player.pos.y - round(self.player.pos.height * 2),
+                self.player.pos.width * 5,
+                self.player.pos.height * 5),
+                self.bullets[i].pos).width != 0:
+                self.colliding[0] = True
+                if self.invinsible_count[0] == -1: self.invinsible_count[0] = 0
+            if get_collision_rec(Rectangle(
+                self.player.pos.x - round(self.player.pos.width * 1),
+                self.player.pos.y - round(self.player.pos.height * 1),
+                self.player.pos.width * 3,
+                self.player.pos.height * 3),
+                self.bullets[i].pos).width != 0:
+                self.colliding[1] = True
+                if self.invinsible_count[1] == -1: self.invinsible_count[1] = 0
+            if get_collision_rec(self.player.pos, self.bullets[i].pos).width != 0:
+                self.colliding[2] = True
+                if self.invinsible_count[2] == -1: self.invinsible_count[2] = 0
+        
+        if self.invinsible_count[0] == 0: self.score -= 50
+        if self.invinsible_count[1] == 0: self.score -= 100
+        if self.invinsible_count[2] == 0: self.score -= 200
+        self.score += 1
 
-        if self.colliding:
-            if not self.still_colliding:
-                self.score -= 6000
-                self.invinsible_count = 0
-        else:
-            self.still_colliding = False
-            self.score += 1
     def Draw(self):
         clear_background(BLACK)
         self.player.Draw()

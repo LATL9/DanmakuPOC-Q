@@ -16,4 +16,18 @@ class Player:
         if (is_key_down(KEY_RIGHT)): self.pos.x += min(WIDTH - self.pos.x - self.pos.width, 8)
 
     def Draw(self):
+        draw_rectangle_rec(Rectangle(
+            self.pos.x - round(self.pos.width * 2),
+            self.pos.y - round(self.pos.height * 2),
+            self.pos.width * 5,
+            self.pos.height * 5),
+            DARKGRAY
+        )
+        draw_rectangle_rec(Rectangle(
+            self.pos.x - round(self.pos.width * 1),
+            self.pos.y - round(self.pos.height * 1),
+            self.pos.width * 3,
+            self.pos.height * 3),
+            LIGHTGRAY
+        )
         draw_rectangle_rec(self.pos, WHITE)
