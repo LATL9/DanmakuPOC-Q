@@ -20,6 +20,7 @@ def main():
         begin_drawing()
 
         game.Draw()
+        draw_fps(8, 8)
 
         end_drawing()
 

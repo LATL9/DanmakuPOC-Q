@@ -1,24 +1,21 @@
 from common import *
 
+import math
 from pyray import *
 
 class Bullet:
-    x = -1
-    y = -1
+    pos = Rectangle(-1, -1, -1, -1)
     v_x = -1
     v_y = -1
-    size = -1
 
-    def __init__(self, _x, _y, _v_x, _v_y, _size):
-        self.x = _x
-        self.y = _y
-        self.v_x = _v_x
-        self.v_y = _v_y
-        self.size = _size
+    def __init__(self, x, y, size, v_x, v_y):
+        self.pos = Rectangle(x, y, size, size)
+        self.v_x = v_x
+        self.v_y = v_y
 
     def Update(self):
-        self.x += self.v_x
-        self.y += self.v_y
+        self.pos.x += self.v_x
+        self.pos.y += self.v_y
 
     def Draw(self):
-        draw_rectangle(self.x, self.y, self.size, self.size, RED)
+        draw_rectangle_rec(self.pos, RED)
