@@ -29,20 +29,7 @@ class Game:
         self.player = Player(math.floor(WIDTH / 2), HEIGHT - 64, 24)
         self.score = 0
     
-    def Reset(self):
-        score = self.score
-        self.bullets = [
-            Bullet(
-                random.randint(0, WIDTH - 11),
-                0,
-                12,
-                round((random.randint(0, 1) - 0.5) * 2) * random.randint(1, 4),
-                random.randint(1, 8)
-            ) for i in range(NUM_BULLETS)
-        ]
-        self.player = Player(math.floor(WIDTH / 2), HEIGHT - 64, 24)
-        self.score = 0
-        return score
+    def End(self): return self.score
     
     def Update(self, keys):
         self.colliding = [False for i in range(len(self.colliding))]
@@ -67,18 +54,18 @@ class Game:
                         random.randint(1, 8)
                     )
             if get_collision_rec(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * 2),
-                self.player.pos.y - round(self.player.pos.height * 2),
-                self.player.pos.width * 5,
-                self.player.pos.height * 5),
+                self.player.pos.x - round(self.player.pos.width * 3),
+                self.player.pos.y - round(self.player.pos.height * 3),
+                self.player.pos.width * 7,
+                self.player.pos.height * 7),
                 self.bullets[i].pos).width != 0:
                 self.colliding[0] = True
                 if self.invinsible_count[0] == -1: self.invinsible_count[0] = 0
             if get_collision_rec(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * 1),
-                self.player.pos.y - round(self.player.pos.height * 1),
-                self.player.pos.width * 3,
-                self.player.pos.height * 3),
+                self.player.pos.x - round(self.player.pos.width * 1.5),
+                self.player.pos.y - round(self.player.pos.height * 1.5),
+                self.player.pos.width * 4,
+                self.player.pos.height * 4),
                 self.bullets[i].pos).width != 0:
                 self.colliding[1] = True
                 if self.invinsible_count[1] == -1: self.invinsible_count[1] = 0
@@ -86,9 +73,8 @@ class Game:
                 self.colliding[2] = True
                 if self.invinsible_count[2] == -1: self.invinsible_count[2] = 0
         
-        if self.invinsible_count[0] == 0: self.score -= 50
-        if self.invinsible_count[1] == 0: self.score -= 100
-        if self.invinsible_count[2] == 0: self.score -= 200
+        for i in range(len(self.invinsible_count)):
+            if self.invinsible_count[i] == 0: self.score -= (i + 1) * 60
         self.score += 1
 
     def Draw(self):

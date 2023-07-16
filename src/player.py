@@ -18,17 +18,17 @@ class Player:
 
     def Draw(self):
         draw_rectangle_rec(Rectangle(
-            self.pos.x - round(self.pos.width * 2),
-            self.pos.y - round(self.pos.height * 2),
-            self.pos.width * 5,
-            self.pos.height * 5),
+            self.pos.x - round(self.pos.width * 3),
+            self.pos.y - round(self.pos.height * 3),
+            self.pos.width * 7,
+            self.pos.height * 7),
             DARKGRAY
         )
         draw_rectangle_rec(Rectangle(
-            self.pos.x - round(self.pos.width * 1),
-            self.pos.y - round(self.pos.height * 1),
-            self.pos.width * 3,
-            self.pos.height * 3),
+            self.pos.x - round(self.pos.width * 1.5),
+            self.pos.y - round(self.pos.height * 1.5),
+            self.pos.width * 4,
+            self.pos.height * 4),
             LIGHTGRAY
         )
         draw_rectangle_rec(self.pos, WHITE)
