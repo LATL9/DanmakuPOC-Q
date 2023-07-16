@@ -10,10 +10,10 @@ class Player:
         self.pos = Rectangle(x, y, size, size)
 
     def Update(self):
-        if (is_key_down(KEY_UP)): self.pos.y -= min(self.pos.y, 8)
-        if (is_key_down(KEY_DOWN)): self.pos.y += min(HEIGHT - self.pos.y - self.pos.height, 8)
-        if (is_key_down(KEY_LEFT)): self.pos.x -= min(self.pos.x, 8)
-        if (is_key_down(KEY_RIGHT)): self.pos.x += min(WIDTH - self.pos.x - self.pos.width, 8)
+        if is_key_down(KEY_UP): self.pos.y -= min(self.pos.y, 8)
+        if is_key_down(KEY_DOWN): self.pos.y += min(HEIGHT - self.pos.y - self.pos.height, 8)
+        if is_key_down(KEY_LEFT): self.pos.x -= min(self.pos.x, 8)
+        if is_key_down(KEY_RIGHT): self.pos.x += min(WIDTH - self.pos.x - self.pos.width, 8)
 
     def Draw(self):
         draw_rectangle_rec(Rectangle(

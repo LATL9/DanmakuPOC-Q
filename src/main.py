@@ -15,6 +15,7 @@ def main():
     while not window_should_close():
         # Update
         game.Update()
+        if is_key_pressed(KEY_R): print(game.Reset())
 
         # Draw
         begin_drawing()

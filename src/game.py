@@ -28,7 +28,22 @@ class Game:
         ]
         self.player = Player(math.floor(WIDTH / 2), HEIGHT - 64, 24)
         self.score = 0
-
+    
+    def Reset(self):
+        score = self.score
+        self.bullets = [
+            Bullet(
+                random.randint(0, WIDTH - 11),
+                0,
+                12,
+                round((random.randint(0, 1) - 0.5) * 2) * random.randint(1, 4),
+                random.randint(1, 8)
+            ) for i in range(NUM_BULLETS)
+        ]
+        self.player = Player(math.floor(WIDTH / 2), HEIGHT - 64, 24)
+        self.score = 0
+        return score
+    
     def Update(self):
         self.colliding = [False for i in range(len(self.colliding))]
         
