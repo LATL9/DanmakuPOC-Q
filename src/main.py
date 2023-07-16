@@ -6,7 +6,7 @@ from pyray import *
 
 def main():
     # Initialization
-    init_window(screenW, screenH, "DanmakuPRC")
+    init_window(WIDTH, HEIGHT, "DanmakuPRC")
     set_target_fps(60)
 
     game = Game()

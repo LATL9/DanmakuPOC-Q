@@ -1,2 +1,3 @@
-screenW = 800
-screenH = 800
+WIDTH = 800
+HEIGHT = 800
+NUM_BULLETS = 64
