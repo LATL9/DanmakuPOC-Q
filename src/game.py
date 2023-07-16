@@ -17,15 +17,17 @@ class Game:
             Bullet(
                 random.randint(0, screenW - 11),
                 0,
-                random.randint(-4, 4),
-                random.randint(0, 6),
+                round((random.randint(0, 1) - 0.5) * 2) * random.randint(1, 4),
+                random.randint(1, 6),
                 12
             ) for i in range(64)
         ]
+        print("asdlsadjalk")
 
         self.player = Player(math.floor(screenW / 2), screenH - 64, 24)
 
     def Update(self):
+        self.player.Update()
         for i in range(len(self.bullets)): 
             self.bullets[i].Update()
             if self.bullets[i].x <= self.bullets[i].size * -1 or \
@@ -39,9 +41,8 @@ class Game:
                         random.randint(0, 8),
                         12
                     )
-        self.player.Update()
 
     def Draw(self):
         clear_background(BLACK)
-        for i in range(len(self.bullets)): self.bullets[i].Draw()
         self.player.Draw()
+        for i in range(len(self.bullets)): self.bullets[i].Draw()
