@@ -6,8 +6,12 @@ from player import *
 import math
 from pyray import *
 import random
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 class Game:
+    device = -1
     random = random.seed()
     bullets = []
     player = Player(-1, -1, -1)
@@ -16,7 +20,8 @@ class Game:
     still_colliding = [False, False, False]
     invinsible_count = [-1, -1, -1] # -1 = not invinsible, 0-59 = invinsible frame (60 is end)
 
-    def __init__(self):
+    def __init__(self, device):
+        self.device = device
         self.bullets = [
             Bullet(
                 random.randint(0, WIDTH - 11),
@@ -83,3 +88,14 @@ class Game:
         for i in range(len(self.bullets)): self.bullets[i].Draw()
         draw_text(str(self.score), 8, 32, 32, WHITE)
         if self.invinsible_count != -1: draw_text(str(self.invinsible_count), 8, 64, 32, DARKGRAY)
+
+    def get_screen(self):
+        x = torch.zeros(2, 33, 33).to(self.device)
+        x[0, 16, 16] = 1 # one dimension for player
+
+        # other dimension for bullets
+        for b in self.bullets:
+            if abs(b.pos.x - self.player.pos.x) <= 200 and \
+                abs(b.pos.y - self.player.pos.y) <= 200:
+                x[1, math.floor((((b.pos.y - self.player.pos.y) / 200) + 1) * 16), math.floor((((b.pos.x - self.player.pos.x) / 200) + 1) * 16)] = 1
+        return x
