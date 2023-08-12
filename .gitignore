@@ -7,8 +7,9 @@ obj/linux/debug/*
 obj/linux/release/*
 obj/windows/debug.*
 obj/windows/release.*
+src/__pycache__/*
 build.sh
-RCT-debug
-RCT-release
+DanmakuPRC-debug
+DanmakuPRC-release
 README.md.backup
 setup.sh
