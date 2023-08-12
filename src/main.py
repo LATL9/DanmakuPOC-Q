@@ -58,6 +58,10 @@ if __name__ == '__main__':
         # 1st quartile stays same
         keys = list(fitnesses.keys())
         
+        median = vals[((NUM_MODELS * 3 // 4) - 1) // 2]
+        quartile_1_avg = sum(vals[:NUM_MODELS // 4]) // (NUM_MODELS // 4)
+        quartile_3_avg = sum(vals[NUM_MODELS * 3 // 4:]) // (NUM_MODELS // 4)
+
         # 2nd quartile
         for i in range(NUM_MODELS // 4, NUM_MODELS // 2):
             # mutation
@@ -80,10 +84,6 @@ if __name__ == '__main__':
                 nn.MaxPool2d(3),
                 nn.Linear(4, 1)
             ).to(device)
-
-        median = vals[(NUM_MODELS + 1) // 2]
-        quartile_1_avg = sum(vals[:NUM_MODELS // 4]) // (NUM_MODELS // 4)
-        quartile_3_avg = sum(vals[NUM_MODELS * 3 // 4:]) // (NUM_MODELS // 4)
 
         log.write("{}, {}, {}, {}\n".format(
             epoch,
