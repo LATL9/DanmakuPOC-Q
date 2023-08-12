@@ -3,7 +3,7 @@ from common import *
 from bullet import *
 from player import *
 
-import math
+from math import floor
 from pyray import *
 import random
 import torch
@@ -18,21 +18,21 @@ class Game:
     score = 0
     colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
     still_colliding = [False, False, False]
-    invinsible_count = [-1, -1, -1] # -1 = not invinsible, 0-59 = invinsible frame (60 is end)
+    invinsible_count = [-1, -1, -1] # -1 = not invinsible, 0 to (FPS - 1) = invinsible frame (FPS is end)
     collides = [] # shows collisions
 
     def __init__(self, device):
         self.device = device
         self.bullets = [
             Bullet(
-                random.randint(0, WIDTH - 11),
+                random.randint(0, WIDTH - 1),
                 0,
                 12,
-                round((random.randint(0, 1) - 0.5) * 2) * random.randint(1, 4),
-                random.randint(1, 8)
+                round((random.randint(0, 1) - 0.5) * 2) * random.randint(1, FPS * 15),
+                random.randint(1, FPS * 7.5)
             ) for i in range(NUM_BULLETS)
         ]
-        self.player = Player(math.floor(WIDTH / 2), HEIGHT - 64, 24)
+        self.player = Player(WIDTH // 2, HEIGHT - 64, 24)
         self.score = 0
     
     def End(self): return self.score
@@ -45,7 +45,7 @@ class Game:
         for i in range(len(self.invinsible_count)):
             if self.invinsible_count[i] != -1:
                 self.invinsible_count[i] += 1
-                if self.invinsible_count[i] == 61: self.invinsible_count[i] = -1
+                if self.invinsible_count[i] == FPS + 1: self.invinsible_count[i] = -1
             
         self.player.Update(keys)
         for i in range(len(self.bullets)): 
@@ -58,8 +58,8 @@ class Game:
                         random.randint(0, WIDTH - 1),
                         0,
                         12,
-                        round((random.randint(0, 1) - 0.5) * 2) * random.randint(1, 4),
-                        random.randint(1, 8)
+                        round((random.randint(0, 1) - 0.5) * 2) * random.randint(1, 240 // FPS),
+                        random.randint(1, 480 // FPS)
                     )
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width * 3),
@@ -85,7 +85,7 @@ class Game:
                 if self.invinsible_count[2] == -1: self.invinsible_count[2] = 0
         
         for i in range(len(self.invinsible_count)):
-            if self.invinsible_count[i] == 0: self.score -= (i + 1) * 60
+            if self.invinsible_count[i] == 0: self.score -= (i + 1) * FPS
 
     def Draw(self):
         clear_background(BLACK)
@@ -118,10 +118,10 @@ class Game:
         
         # centre pixel (16, 16) is player
         for b in self.bullets:
-            if abs(b.pos.x - self.player.pos.x) <= 400 and \
-                abs(b.pos.y - self.player.pos.y) <= 400:
-                x_pos = math.floor((((b.pos.x - self.player.pos.x) / 400) + 1) * 16)
-                y_pos = math.floor((((b.pos.y - self.player.pos.y) / 400) + 1) * 16)
+            if abs(b.pos.x - self.player.pos.x) <= WIDTH // 2 and \
+                abs(b.pos.y - self.player.pos.y) <= HEIGHT// 2:
+                x_pos = floor((((b.pos.x - self.player.pos.x) / WIDTH // 2) + 1) * 16)
+                y_pos = floor((((b.pos.y - self.player.pos.y) / HEIGHT // 2) + 1) * 16)
                 x[0, y_pos, x_pos] = 1
 
         return x
