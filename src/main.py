@@ -40,6 +40,9 @@ if __name__ == '__main__':
         for j in range(NUM_PROCESSES)
     ]
 
+    log = open("log.csv", 'w')
+    log.write("Epoch, Median, 1st Quartile Avg, 3rd Quartile Avg\n") # header
+    stats = ""
     epoch = 0
     while True:
         epoch += 1
@@ -78,9 +81,20 @@ if __name__ == '__main__':
                 nn.Linear(4, 1)
             ).to(device)
 
-        print("Epoch {}: Median = {}, 1st Quartile Avg = {}, 3rd Quartile Avg = {}".format(
+        median = vals[(NUM_MODELS + 1) // 2]
+        quartile_1_avg = sum(vals[:NUM_MODELS // 4]) // (NUM_MODELS // 4)
+        quartile_3_avg = sum(vals[NUM_MODELS * 3 // 4:]) // (NUM_MODELS // 4)
+
+        log.write("{}, {}, {}, {}\n".format(
             epoch,
-            vals[(NUM_MODELS + 1) // 2],
-            sum(vals[:NUM_MODELS // 4]) // (NUM_MODELS // 4),
-            sum(vals[NUM_MODELS * 3 // 4:]) // (NUM_MODELS // 4)
+            median,
+            quartile_1_avg,
+            quartile_3_avg
         ))
+        log.flush()
+        print("Epoch {}: Median = {}, 1st Quartile Avg = {}, 3rd Quartile Avg = {}\n".format(
+            epoch,
+            median,
+            quartile_1_avg,
+            quartile_3_avg
+        ), end='')
