@@ -61,14 +61,13 @@ if __name__ == '__main__':
 
         fitnesses = train()
         fitnesses = {k: v for k, v in sorted(fitnesses.items(), key=lambda item: item[1], reverse=True)}
-        vals = list(fitnesses.values())
 
         # mutation (1st quartile = highest fitness, 4th quarter = lowest fitness):
         # 4th quartile is replaced with new random weights
         # 3rd quartile is replaced by 1st quarter with mutations
         # 2nd quartile is mutated
         # 1st quartile stays same
-        keys = list(fitnesses.keys())
+        vals = list(fitnesses.values())
         
         median = vals[((NUM_MODELS * 3 // 4) - 1) // 2]
         quartile_1_avg = sum(vals[:NUM_MODELS // 4]) // (NUM_MODELS // 4)

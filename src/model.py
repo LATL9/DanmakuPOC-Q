@@ -19,7 +19,7 @@ class NNModel:
 
     def train(self):
         self.g = Game(self.device)
-        for j in range(60 * TRAIN_TIME):
+        for j in range(FPS * TRAIN_TIME):
             self.g.Update(self.test(self.g.get_screen()))
         return self.g.score
         
@@ -31,6 +31,7 @@ class NNModel:
         for i in range(4):
             if float(x[0][i]) > float(x[0][m]): m = i
         keys[m] = 1
+
         if self.index == -1:
             print({
                 0: "Up",
