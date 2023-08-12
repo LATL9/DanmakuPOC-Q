@@ -2,7 +2,7 @@ import threading
 
 WIDTH = 800
 HEIGHT = 800
-FPS = 60
+FPS = 30
 NUM_BULLETS = 32
 NUM_PROCESSES = 12
 NUM_MODELS = 48 # must be divisible by 4 (to divide into exact quarters)
