@@ -12,17 +12,18 @@ class NNModel:
     g = -1
     model = -1
 
-    def __init__(self, device, index, model):
+    def __init__(self, device, seed, index, model):
         self.device = device
         self.index = index
         self.model = model
+        self.seed = seed
+        self.g = Game(self.device, self.seed)
 
         if self.index == TEST_MODEL: # test model to show to user
             init_window(WIDTH, HEIGHT, "DanmakuPRC")
             set_target_fps(FPS)
 
     def train(self):
-        self.g = Game(self.device)
         for j in range(FPS * TRAIN_TIME):
             self.g.Update(self.test(self.g.get_screen()))
 

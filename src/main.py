@@ -13,7 +13,7 @@ def train():
     threads = []
    
     for i in range(NUM_PROCESSES):
-        threads.append(ThreadWithResult(target=test, args=(device, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)))
+        threads.append(ThreadWithResult(target=test, args=(device, seed, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)))
     if TEST_MODEL == -1:
         for i in range(len(threads)): 
             threads[i].start()
@@ -28,10 +28,10 @@ def train():
 
     return fitnesses
 
-def test(device, indexes, _models): # _ presents naming conflict
+def test(device, seed, indexes, _models): # _ presents naming conflict
     r = {}
     for i in range(NUM_MODELS_PER_PROCESS):
-        m = NNModel(device, indexes[i], _models[i])
+        m = NNModel(device, seed, indexes[i], _models[i])
         r[indexes[i]] = m.train()
     return r
 
@@ -69,6 +69,7 @@ if __name__ == '__main__':
     while True:
         epoch += 1
 
+        seed = time.time()
         fitnesses = train()
         fitnesses = {k: v for k, v in sorted(fitnesses.items(), key=lambda item: item[1], reverse=True)}
 
@@ -117,7 +118,7 @@ if __name__ == '__main__':
         ))
         log.flush()
         # 1st column is epoch, subsequent even columns = model index and odd columns = model fitness ordered in descending order of fitness
-        rankings.write("{}, {}\n".format(epoch, ", ".join(["{}, {}".format(x, fitness[x]) for x in fitnesses])))
+        rankings.write("{}, {}\n".format(epoch, ", ".join(["{}, {}".format(x, fitnesses[x]) for x in fitnesses])))
         rankings.flush()
 
         if epoch % 5 == 0:

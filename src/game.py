@@ -12,7 +12,7 @@ import torch.nn.functional as F
 
 class Game:
     device = -1
-    random = random.seed()
+    rng = -1
     bullets = []
     player = Player(-1, -1, -1)
     score = 0
@@ -21,15 +21,16 @@ class Game:
     invinsible_count = [-1, -1, -1] # -1 = not invinsible, 0 to (FPS - 1) = invinsible frame (FPS is end)
     if TEST_MODEL != -1: collides = [] # shows collisions (used for demonstration, not in training)
 
-    def __init__(self, device):
+    def __init__(self, device, seed):
         self.device = device
+        self.rng = random.Random(seed)
         self.bullets = [
             Bullet(
-                random.randint(0, WIDTH - 1),
+                self.rng.randint(0, WIDTH - 1),
                 0,
                 12,
-                round((random.randint(0, 1) - 0.5) * 2) * random.randint(1, FPS * 15),
-                random.randint(1, FPS * 7.5)
+                round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, FPS * 15),
+                self.rng.randint(1, FPS * 7.5)
             ) for i in range(NUM_BULLETS)
         ]
         self.player = Player(WIDTH // 2, HEIGHT - 64, 24)
@@ -55,11 +56,11 @@ class Game:
                 self.bullets[i].pos.y <= self.bullets[i].pos.height * -1 or \
                 self.bullets[i].pos.y >= HEIGHT:
                     self.bullets[i] = Bullet(
-                        random.randint(0, WIDTH - 1),
+                        self.rng.randint(0, WIDTH - 1),
                         0,
                         12,
-                        round((random.randint(0, 1) - 0.5) * 2) * random.randint(1, 240 // FPS),
-                        random.randint(1, 480 // FPS)
+                        round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, 240 // FPS),
+                        self.rng.randint(1, 480 // FPS)
                     )
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width * 3),
