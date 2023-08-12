@@ -60,7 +60,7 @@ if __name__ == '__main__':
     except FileNotFoundError:
         epoch = 0
         log = open("log.csv", 'w')
-        log.write("Epoch, Median, 1st Quartile Avg, 3rd Quartile Avg\n") # header
+        log.write("Time, Epoch, Median, 1st Quartile Avg, 3rd Quartile Avg\n") # header
 
     stats = ""
     while True:
