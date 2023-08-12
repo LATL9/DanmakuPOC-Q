@@ -86,7 +86,6 @@ class Game:
         
         for i in range(len(self.invinsible_count)):
             if self.invinsible_count[i] == 0: self.score -= (i + 1) * 60
-        self.score += 1
 
     def Draw(self):
         clear_background(BLACK)
