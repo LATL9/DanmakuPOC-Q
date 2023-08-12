@@ -17,5 +17,6 @@ class Bullet:
         self.pos.x += self.v_x
         self.pos.y += self.v_y
 
-    def Draw(self):
-        draw_rectangle_rec(self.pos, RED)
+    def Draw(self, blue=False):
+        if blue: draw_rectangle_rec(self.pos, BLUE)
+        else: draw_rectangle_rec(self.pos, RED)
