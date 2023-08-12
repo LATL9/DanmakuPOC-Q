@@ -54,4 +54,11 @@ if __name__ == '__main__':
 
     rewards = train()
     rewards = {k: v for k, v in sorted(rewards.items(), key=lambda item: item[1], reverse=True)}
-    print(rewards)
+    vals = list(rewards.values())
+    print("Epoch {}: Mean = {}, Median = {}, Top 50% = {}, Bottom 50% = {}".format(
+        epoch,
+        sum(rewards.values()) // len(rewards),
+        vals[(len(rewards) + 1) // 2],
+        sum(vals[:len(rewards) // 2]) // (len(rewards) // 2),
+        sum(vals[len(rewards) // 2:]) // (len(rewards) // 2)
+    ))
