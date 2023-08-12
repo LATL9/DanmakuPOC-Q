@@ -114,21 +114,15 @@ class Game:
         return False
 
     def get_screen(self):
-        x = torch.zeros(3, 33, 33).to(self.device)
+        # dimension indicates bullets (0 = no bullet, 1 = bullet)
+        x = torch.zeros(1, 33, 33).to(self.device)
         
-        # second dimension indicates bullets
-        # last dimension for blank spaces (prevents sparse input layer)
-        x[2] = torch.ones(33, 33).to(self.device)
-        x[0, 16, 16] = 1 # first dimension for player
-        x[2, 16, 16] = 0 # player is not blank space
-
-        # other dimension for bullets
+        # centre pixel (16, 16) is player
         for b in self.bullets:
             if abs(b.pos.x - self.player.pos.x) <= 400 and \
                 abs(b.pos.y - self.player.pos.y) <= 400:
                 x_pos = math.floor((((b.pos.x - self.player.pos.x) / 400) + 1) * 16)
                 y_pos = math.floor((((b.pos.y - self.player.pos.y) / 400) + 1) * 16)
-                x[1, y_pos, x_pos] = 1
-                x[2, y_pos, x_pos] = 0
+                x[0, y_pos, x_pos] = 1
 
         return x

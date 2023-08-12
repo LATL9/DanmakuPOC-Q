@@ -1,7 +1,6 @@
 from common import *
 
 from game import *
-from gui import *
 from model import *
 
 from pyray import *
@@ -14,7 +13,7 @@ def train():
    
     conv1s = [
         [nn.Sequential(
-            nn.Conv2d(3, 1, 16, 1, 2),
+            nn.Conv2d(1, 1, 16, 1, 2),
             nn.MaxPool2d(2)
         ).to(device) for i in range(NUM_MODELS_PER_PROCESS)]
         for j in range(NUM_PROCESSES)
@@ -54,5 +53,5 @@ if __name__ == '__main__':
     epoch = 1
 
     rewards = train()
-    rewards = {k: v for k, v in sorted(rewards.items(), key=lambda item: item[1])}
+    rewards = {k: v for k, v in sorted(rewards.items(), key=lambda item: item[1], reverse=True)}
     print(rewards)
