@@ -104,7 +104,8 @@ if __name__ == '__main__':
                 nn.Linear(4, 1)
             ).to(device)
 
-        log.write("{}, {}, {}, {}\n".format(
+        log.write("{}, {}, {}, {}, {}\n".format(
+            time.asctime(),
             epoch,
             median,
             quartile_1_avg,
