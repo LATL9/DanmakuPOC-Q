@@ -12,7 +12,7 @@ def train():
     threads = []
    
     for i in range(NUM_PROCESSES):
-        threads.append(ThreadWithResult(target=test, args=(device, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), conv1s[i], conv2s[i], outs[i],)))
+        threads.append(ThreadWithResult(target=test, args=(device, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)))
     for i in range(len(threads)): 
         threads[i].start()
     for i in range(len(threads)):
@@ -20,38 +20,27 @@ def train():
         fitnesses = {**fitnesses, **threads[i].result}
     return fitnesses
 
-def test(device, indexes, _conv1s, _conv2s, _outs): # _ presents naming conflict
+def test(device, indexes, _models): # _ presents naming conflict
     r = {}
     for i in range(NUM_MODELS_PER_PROCESS):
-        m = NNModel(device, indexes[i], _conv1s[i], _conv2s[i], _outs[i])
+        m = NNModel(device, indexes[i], _models[i])
         r[indexes[i]] = m.train()
     return r
 
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    conv1s = [
+    models = [
         [nn.Sequential(
             nn.Conv2d(1, 1, 16, 1, 2),
-            nn.MaxPool2d(2)
-        ).to(device) for i in range(NUM_MODELS_PER_PROCESS)]
-        for j in range(NUM_PROCESSES)
-    ]
-    conv2s = [
-        [nn.Sequential(
+            nn.MaxPool2d(2),
             nn.Conv2d(1, 1, 4, 1, 2),
-            nn.MaxPool2d(3)
-        ).to(device) for i in range(NUM_MODELS_PER_PROCESS)]
-        for j in range(NUM_PROCESSES)
-    ]
-    outs = [
-        [nn.Sequential(
+            nn.MaxPool2d(3),
             nn.Linear(4, 1)
         ).to(device) for i in range(NUM_MODELS_PER_PROCESS)]
         for j in range(NUM_PROCESSES)
     ]
 
     epoch = 0
-
     while True:
         epoch += 1
 
@@ -68,38 +57,24 @@ if __name__ == '__main__':
         
         # 2nd quarter
         for i in range(NUM_MODELS // 4, NUM_MODELS // 2):
-            for param in conv1s[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].parameters():
-                param.data += MUTATION_POWER * torch.randn_like(param)
-            for param in conv2s[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].parameters():
-                param.data += MUTATION_POWER * torch.randn_like(param)
-            for param in outs[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].parameters():
+            for param in models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].parameters():
                 param.data += MUTATION_POWER * torch.randn_like(param)
 
         # 3rd quarter
         for i in range(NUM_MODELS // 4):
-            conv1s[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS] = conv1s[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS]
-            conv2s[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS] = conv2s[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS]
-            outs[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS] = outs[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS]
+            models[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS] = models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS]
 
             # mutation
-            for param in conv1s[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS].parameters():
-                param.data += MUTATION_POWER * torch.randn_like(param)
-            for param in conv2s[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS].parameters():
-                param.data += MUTATION_POWER * torch.randn_like(param)
-            for param in outs[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS].parameters():
+            for param in models[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS].parameters():
                 param.data += MUTATION_POWER * torch.randn_like(param)
 
         # 4th quarter
         for i in range(NUM_MODELS * 3 // 4, NUM_MODELS):
-            conv1s[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS] = nn.Sequential(
+            models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS] = nn.Sequential(
                 nn.Conv2d(1, 1, 16, 1, 2),
-                nn.MaxPool2d(2)
-            ).to(device)
-            conv2s[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS] = nn.Sequential(
+                nn.MaxPool2d(2),
                 nn.Conv2d(1, 1, 4, 1, 2),
-                nn.MaxPool2d(3)
-            ).to(device)
-            outs[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS] = nn.Sequential(
+                nn.MaxPool2d(3),
                 nn.Linear(4, 1)
             ).to(device)
 
