@@ -4,6 +4,7 @@ from game import *
 from model import *
 
 from pyray import *
+import os
 import time
 import threading
 
@@ -40,10 +41,21 @@ if __name__ == '__main__':
         for j in range(NUM_PROCESSES)
     ]
 
-    log = open("log.csv", 'w')
-    log.write("Epoch, Median, 1st Quartile Avg, 3rd Quartile Avg\n") # header
+    try:
+        checkpoint = torch.load("models/models.pt")
+        epoch = checkpoint['epoch']
+        for i in range(NUM_MODELS):
+            models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].load_state_dict(checkpoint['model{}_state_dict'.format(i)])
+
+        print("Restarting from checkpoint at epoch {}.".format(epoch))
+        log = open("log.csv", 'a')
+
+    except FileNotFoundError:
+        epoch = 0
+        log = open("log.csv", 'w')
+        log.write("Epoch, Median, 1st Quartile Avg, 3rd Quartile Avg\n") # header
+
     stats = ""
-    epoch = 0
     while True:
         epoch += 1
 
@@ -92,6 +104,15 @@ if __name__ == '__main__':
             quartile_3_avg
         ))
         log.flush()
+
+        if epoch % 5 == 0:
+            fitnesses = {k: v for k, v in sorted(fitnesses.items(), key=lambda item: item[1], reverse=True)}
+            checkpoint = {'epoch': epoch}
+            for i in range(NUM_MODELS):
+                checkpoint['model{}_state_dict'.format(i)] = models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].state_dict()
+            torch.save(checkpoint, "models/models-{}.pt".format(epoch))
+            os.system("cp models/models-{}.pt models/models.pt".format(epoch)) # models.pt = most recent
+
         print("Epoch {}: Median = {}, 1st Quartile Avg = {}, 3rd Quartile Avg = {}\n".format(
             epoch,
             median,

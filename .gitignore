@@ -1,12 +1,5 @@
 .etc/
-bin/linux/debug/*
-bin/linux/release/*
-bin/windows/debug.*
-bin/windows/release.*
-obj/linux/debug/*
-obj/linux/release/*
-obj/windows/debug.*
-obj/windows/release.*
+models/models*
 src/__pycache__/*
 build.sh
 DanmakuPRC-debug

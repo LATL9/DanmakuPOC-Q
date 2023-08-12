@@ -3,8 +3,8 @@ from common import *
 from bullet import *
 from player import *
 
-from math import floor
 from pyray import *
+import math
 import random
 import torch
 import torch.nn as nn
@@ -120,8 +120,8 @@ class Game:
         for b in self.bullets:
             if abs(b.pos.x - self.player.pos.x) <= WIDTH // 2 and \
                 abs(b.pos.y - self.player.pos.y) <= HEIGHT// 2:
-                x_pos = floor((((b.pos.x - self.player.pos.x) / WIDTH // 2) + 1) * 16)
-                y_pos = floor((((b.pos.y - self.player.pos.y) / HEIGHT // 2) + 1) * 16)
+                x_pos = math.floor((((b.pos.x - self.player.pos.x) / WIDTH // 2) + 1) * 16)
+                y_pos = math.floor((((b.pos.y - self.player.pos.y) / HEIGHT // 2) + 1) * 16)
                 x[0, y_pos, x_pos] = 1
 
         return x
