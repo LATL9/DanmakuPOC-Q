@@ -19,7 +19,7 @@ class Game:
     colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
     still_colliding = [False, False, False]
     invinsible_count = [-1, -1, -1] # -1 = not invinsible, 0 to (FPS - 1) = invinsible frame (FPS is end)
-    collides = [] # shows collisions
+    #collides = [] # shows collisions (used for demonstration, not in training)
 
     def __init__(self, device):
         self.device = device
@@ -38,7 +38,7 @@ class Game:
     def End(self): return self.score
     
     def Update(self, keys):
-        self.collides = []
+        #self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
         
@@ -67,7 +67,7 @@ class Game:
                 self.player.pos.width * 7,
                 self.player.pos.height * 7),
                 self.bullets[i].pos):
-                self.collides.append(i);
+                #self.collides.append(i);
                 self.colliding[0] = True
                 if self.invinsible_count[0] == -1: self.invinsible_count[0] = 0
             if self.is_colliding(Rectangle(
@@ -76,11 +76,11 @@ class Game:
                 self.player.pos.width * 4,
                 self.player.pos.height * 4),
                 self.bullets[i].pos):
-                self.collides.append(i);
+                #self.collides.append(i);
                 self.colliding[1] = True
                 if self.invinsible_count[1] == -1: self.invinsible_count[1] = 0
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
-                self.collides.append(i);
+                #self.collides.append(i);
                 self.colliding[2] = True
                 if self.invinsible_count[2] == -1: self.invinsible_count[2] = 0
         
@@ -91,7 +91,7 @@ class Game:
         clear_background(BLACK)
         self.player.Draw()
         for i in range(len(self.bullets)): self.bullets[i].Draw()
-        for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
+        #for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
         draw_text(str(self.score), 8, 32, 32, WHITE)
         if self.invinsible_count != -1: draw_text(str(self.invinsible_count), 8, 64, 32, DARKGRAY)
 
