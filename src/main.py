@@ -56,11 +56,14 @@ if __name__ == '__main__':
 
         print("Restarting from checkpoint at epoch {}.".format(epoch))
         log = open("log.csv", 'a')
+        rankings = open("rankings.csv", 'a')
 
     except FileNotFoundError:
         epoch = 0
         log = open("log.csv", 'w')
         log.write("Time, Epoch, Median, 1st Quartile Avg, 3rd Quartile Avg\n") # header
+        rankings = open("rankings.csv", 'w')
+        rankings.write("Epoch, Models\n") # header
 
     stats = ""
     while True:
@@ -113,6 +116,8 @@ if __name__ == '__main__':
             quartile_3_avg
         ))
         log.flush()
+        rankings.write("{}, {}\n".format(epoch, ", ".join([str(x) for x in fitnesses])))
+        rankings.flush()
 
         if epoch % 5 == 0:
             fitnesses = {k: v for k, v in sorted(fitnesses.items(), key=lambda item: item[1], reverse=True)}
