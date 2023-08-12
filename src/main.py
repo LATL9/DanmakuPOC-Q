@@ -14,11 +14,17 @@ def train():
    
     for i in range(NUM_PROCESSES):
         threads.append(ThreadWithResult(target=test, args=(device, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)))
-    for i in range(len(threads)): 
-        threads[i].start()
-    for i in range(len(threads)):
-        threads[i].join()
-        fitnesses = {**fitnesses, **threads[i].result}
+    if TEST_MODEL == -1:
+        for i in range(len(threads)): 
+            threads[i].start()
+        for i in range(len(threads)):
+            threads[i].join()
+    else:
+        # if testing, only test thread containing specified model
+        threads[TEST_MODEL // NUM_MODELS_PER_PROCESS].start()
+        threads[TEST_MODEL // NUM_MODELS_PER_PROCESS].join()
+        fitnesses = {**fitnesses, **threads[TEST_MODEL // NUM_MODELS_PER_PROCESS].result}
+
     return fitnesses
 
 def test(device, indexes, _models): # _ presents naming conflict
@@ -61,6 +67,8 @@ if __name__ == '__main__':
 
         fitnesses = train()
         fitnesses = {k: v for k, v in sorted(fitnesses.items(), key=lambda item: item[1], reverse=True)}
+
+        if TEST_MODEL != -1: exit() # if testing, exit now
 
         # mutation (1st quartile = highest fitness, 4th quarter = lowest fitness):
         # 4th quartile is replaced with new random weights

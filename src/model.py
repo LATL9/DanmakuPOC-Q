@@ -17,10 +17,19 @@ class NNModel:
         self.index = index
         self.model = model
 
+        if self.index == TEST_MODEL: # test model to show to user
+            init_window(WIDTH, HEIGHT, "DanmakuPRC")
+            set_target_fps(FPS)
+
     def train(self):
         self.g = Game(self.device)
         for j in range(FPS * TRAIN_TIME):
             self.g.Update(self.test(self.g.get_screen()))
+
+            if self.index == TEST_MODEL:
+                begin_drawing()
+                self.g.Draw()
+                end_drawing()
         return self.g.score
         
     def test(self, x):

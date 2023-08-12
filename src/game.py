@@ -19,7 +19,7 @@ class Game:
     colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
     still_colliding = [False, False, False]
     invinsible_count = [-1, -1, -1] # -1 = not invinsible, 0 to (FPS - 1) = invinsible frame (FPS is end)
-    #collides = [] # shows collisions (used for demonstration, not in training)
+    if TEST_MODEL != -1: collides = [] # shows collisions (used for demonstration, not in training)
 
     def __init__(self, device):
         self.device = device
@@ -38,7 +38,7 @@ class Game:
     def End(self): return self.score
     
     def Update(self, keys):
-        #self.collides = []
+        if TEST_MODEL != -1: self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
         
@@ -67,7 +67,7 @@ class Game:
                 self.player.pos.width * 7,
                 self.player.pos.height * 7),
                 self.bullets[i].pos):
-                #self.collides.append(i);
+                if TEST_MODEL != -1: self.collides.append(i);
                 self.colliding[0] = True
                 if self.invinsible_count[0] == -1: self.invinsible_count[0] = 0
             if self.is_colliding(Rectangle(
@@ -76,11 +76,11 @@ class Game:
                 self.player.pos.width * 4,
                 self.player.pos.height * 4),
                 self.bullets[i].pos):
-                #self.collides.append(i);
+                if TEST_MODEL != -1: self.collides.append(i);
                 self.colliding[1] = True
                 if self.invinsible_count[1] == -1: self.invinsible_count[1] = 0
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
-                #self.collides.append(i);
+                if TEST_MODEL != -1: self.collides.append(i);
                 self.colliding[2] = True
                 if self.invinsible_count[2] == -1: self.invinsible_count[2] = 0
         
@@ -91,17 +91,17 @@ class Game:
         clear_background(BLACK)
         self.player.Draw()
         for i in range(len(self.bullets)): self.bullets[i].Draw()
-        #for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
+        for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
         draw_text(str(self.score), 8, 32, 32, WHITE)
         if self.invinsible_count != -1: draw_text(str(self.invinsible_count), 8, 64, 32, DARKGRAY)
 
         # minimap
         s = self.get_screen()
-        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 128 ))
-        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 128 ))
+        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 255 ))
+        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 255 ))
         for y in range(32):
             for x in range(32):
-                if s[1, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 128 ))
+                if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 255 ))
 
     def is_colliding(self, r1, r2):
         if (r1.x == r2.x or \
@@ -114,14 +114,14 @@ class Game:
 
     def get_screen(self):
         # dimension indicates bullets (0 = no bullet, 1 = bullet)
-        x = torch.zeros(1, 33, 33).to(self.device)
+        s = torch.zeros(1, 33, 33).to(self.device)
         
         # centre pixel (16, 16) is player
         for b in self.bullets:
             if abs(b.pos.x - self.player.pos.x) <= WIDTH // 2 and \
                 abs(b.pos.y - self.player.pos.y) <= HEIGHT// 2:
-                x_pos = math.floor((((b.pos.x - self.player.pos.x) / WIDTH // 2) + 1) * 16)
-                y_pos = math.floor((((b.pos.y - self.player.pos.y) / HEIGHT // 2) + 1) * 16)
-                x[0, y_pos, x_pos] = 1
+                x = math.floor((((b.pos.x - self.player.pos.x) / (WIDTH // 2)) + 1) * 16)
+                y = math.floor((((b.pos.y - self.player.pos.y) / (HEIGHT // 2)) + 1) * 16)
+                s[0, y, x] = 1
 
-        return x
+        return s
