@@ -63,19 +63,19 @@ class Game:
                         self.rng.randint(1, 480 // FPS)
                     )
             if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * 3),
-                self.player.pos.y - round(self.player.pos.height * 3),
-                self.player.pos.width * 7,
-                self.player.pos.height * 7),
+                self.player.pos.x - round(self.player.pos.width * 1.5),
+                self.player.pos.y - round(self.player.pos.height * 1.5),
+                self.player.pos.width * 4,
+                self.player.pos.height * 4),
                 self.bullets[i].pos):
                 if TEST_MODEL != -1: self.collides.append(i);
                 self.colliding[0] = True
                 if self.invinsible_count[0] == -1: self.invinsible_count[0] = 0
             if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * 1.5),
-                self.player.pos.y - round(self.player.pos.height * 1.5),
-                self.player.pos.width * 4,
-                self.player.pos.height * 4),
+                self.player.pos.x - round(self.player.pos.width * 0.75),
+                self.player.pos.y - round(self.player.pos.height * 0.75),
+                self.player.pos.width * 2.5,
+                self.player.pos.height * 2.5),
                 self.bullets[i].pos):
                 if TEST_MODEL != -1: self.collides.append(i);
                 self.colliding[1] = True
