@@ -26,11 +26,11 @@ class NNModel:
     def train(self):
         for j in range(FPS * TRAIN_TIME):
             self.g.Update(self.test(self.g.get_screen()))
-
             if self.index == TEST_MODEL:
                 begin_drawing()
                 self.g.Draw()
                 end_drawing()
+
         return self.g.score
         
     def test(self, x):
