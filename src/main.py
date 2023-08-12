@@ -116,7 +116,8 @@ if __name__ == '__main__':
             quartile_3_avg
         ))
         log.flush()
-        rankings.write("{}, {}\n".format(epoch, ", ".join([str(x) for x in fitnesses])))
+        # 1st column is epoch, subsequent even columns = model index and odd columns = model fitness ordered in descending order of fitness
+        rankings.write("{}, {}\n".format(epoch, ", ".join(["{}, {}".format(x, fitness[x]) for x in fitnesses])))
         rankings.flush()
 
         if epoch % 5 == 0:
