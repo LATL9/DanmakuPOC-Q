@@ -19,6 +19,7 @@ def train():
             threads[i].start()
         for i in range(len(threads)):
             threads[i].join()
+            fitnesses = {**fitnesses, **threads[i].result}
     else:
         # if testing, only test thread containing specified model
         threads[TEST_MODEL // NUM_MODELS_PER_PROCESS].start()
