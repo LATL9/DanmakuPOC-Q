@@ -8,7 +8,7 @@ import time
 import threading
 
 def train():
-    rewards = {}
+    fitnesses = {}
     threads = []
    
     conv1s = [
@@ -38,8 +38,8 @@ def train():
         threads[i].start()
     for i in range(len(threads)):
         threads[i].join()
-        rewards = {**rewards, **threads[i].result}
-    return rewards
+        fitnesses = {**fitnesses, **threads[i].result}
+    return fitnesses
 
 def test(device, indexes, conv1s, conv2s, outs):
     r = {}
@@ -52,13 +52,13 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     epoch = 1
 
-    rewards = train()
-    rewards = {k: v for k, v in sorted(rewards.items(), key=lambda item: item[1], reverse=True)}
-    vals = list(rewards.values())
+    fitnesses = train()
+    fitnesses = {k: v for k, v in sorted(fitnesses.items(), key=lambda item: item[1], reverse=True)}
+    vals = list(fitnesses.values())
     print("Epoch {}: Mean = {}, Median = {}, Top 50% = {}, Bottom 50% = {}".format(
         epoch,
-        sum(rewards.values()) // len(rewards),
-        vals[(len(rewards) + 1) // 2],
-        sum(vals[:len(rewards) // 2]) // (len(rewards) // 2),
-        sum(vals[len(rewards) // 2:]) // (len(rewards) // 2)
+        sum(fitnesses.values()) // len(fitnesses),
+        vals[(len(fitnesses) + 1) // 2],
+        sum(vals[:len(fitnesses) // 2]) // (len(fitnesses) // 2),
+        sum(vals[len(fitnesses) // 2:]) // (len(fitnesses) // 2)
     ))
