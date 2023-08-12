@@ -29,8 +29,8 @@ class Game:
                 self.rng.randint(0, WIDTH - 1),
                 0,
                 12,
-                round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, FPS * 15),
-                self.rng.randint(1, FPS * 7.5)
+                round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, 240 // FPS),
+                self.rng.randint(1, 480 // FPS)
             ) for i in range(NUM_BULLETS)
         ]
         self.player = Player(WIDTH // 2, HEIGHT - 64, 24)
