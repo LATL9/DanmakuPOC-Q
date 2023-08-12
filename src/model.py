@@ -2,9 +2,6 @@ from common import *
 
 from game import *
 
-# TEMP
-#from pyray import *
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,9 +10,7 @@ class NNModel:
     device = -1
     index = -1
     g = -1
-    conv1 = -1
-    conv2 = -1
-    out = -1
+    model = -1
 
     def __init__(self, device, index, model):
         self.device = device
