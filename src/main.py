@@ -61,7 +61,7 @@ if __name__ == '__main__':
         # 2nd quartile
         for i in range(NUM_MODELS // 4, NUM_MODELS // 2):
             for param in models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].parameters():
-                param.data += MUTATION_POWER * torch.randn_like(param)
+                param.data += MUTATION_POWER * torch.randn_like(param).to(device)
 
         # 3rd quartile
         for i in range(NUM_MODELS // 4):
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
             # mutation
             for param in models[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS].parameters():
-                param.data += MUTATION_POWER * torch.randn_like(param)
+                param.data += MUTATION_POWER * torch.randn_like(param).to(device)
 
         # 4th quartile
         for i in range(NUM_MODELS * 3 // 4, NUM_MODELS):
