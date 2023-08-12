@@ -48,19 +48,19 @@ if __name__ == '__main__':
         fitnesses = {k: v for k, v in sorted(fitnesses.items(), key=lambda item: item[1], reverse=True)}
         vals = list(fitnesses.values())
 
-        # mutation (1st quarter = highest fitness, 4th quarter = lowest fitness):
-        # 4th quarter is replaced with new random weights
-        # 3rd quarter is replaced by 1st quarter with mutations
-        # 2nd quarter is mutated
-        # 1st quarter stays same
+        # mutation (1st quartile = highest fitness, 4th quarter = lowest fitness):
+        # 4th quartile is replaced with new random weights
+        # 3rd quartile is replaced by 1st quarter with mutations
+        # 2nd quartile is mutated
+        # 1st quartile stays same
         keys = list(fitnesses.keys())
         
-        # 2nd quarter
+        # 2nd quartile
         for i in range(NUM_MODELS // 4, NUM_MODELS // 2):
             for param in models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].parameters():
                 param.data += MUTATION_POWER * torch.randn_like(param)
 
-        # 3rd quarter
+        # 3rd quartile
         for i in range(NUM_MODELS // 4):
             models[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS] = models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS]
 
@@ -68,7 +68,7 @@ if __name__ == '__main__':
             for param in models[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS].parameters():
                 param.data += MUTATION_POWER * torch.randn_like(param)
 
-        # 4th quarter
+        # 4th quartile
         for i in range(NUM_MODELS * 3 // 4, NUM_MODELS):
             models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS] = nn.Sequential(
                 nn.Conv2d(1, 1, 16, 1, 2),
@@ -78,10 +78,9 @@ if __name__ == '__main__':
                 nn.Linear(4, 1)
             ).to(device)
 
-        print("Epoch {}: Mean = {}, Median = {}, Top 50% = {}, Bottom 50% = {}".format(
+        print("Epoch {}: Median = {}, 1st Quartile Avg = {}, 3rd Quartile Avg = {}".format(
             epoch,
-            sum(fitnesses.values()) // NUM_MODELS,
             vals[(NUM_MODELS + 1) // 2],
-            sum(vals[:NUM_MODELS // 2]) // (NUM_MODELS // 2),
-            sum(vals[NUM_MODELS // 2:]) // (NUM_MODELS // 2)
+            sum(vals[:NUM_MODELS // 4]) // (NUM_MODELS // 4),
+            sum(vals[NUM_MODELS * 3 // 4:]) // (NUM_MODELS // 4)
         ))
