@@ -18,7 +18,7 @@ class Game:
     score = 0
     colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
     still_colliding = [False, False, False]
-    invinsible_count = [-1, -1, -1] # -1 = not invinsible, 0 to (FPS - 1) = invinsible frame (FPS is end)
+    invincible_count = [-1, -1, -1] # -1 = not invincible, 0 to (FPS - 1) = invincible frame (FPS is end)
     if TEST_MODEL != -1: collides = [] # shows collisions (used for demonstration, not in training)
 
     def __init__(self, device, seed):
@@ -38,10 +38,10 @@ class Game:
 
         self.colliding = [False for i in range(len(self.colliding))]
         
-        for i in range(len(self.invinsible_count)):
-            if self.invinsible_count[i] != -1:
-                self.invinsible_count[i] += 1
-                if self.invinsible_count[i] == FPS + 1: self.invinsible_count[i] = -1
+        for i in range(len(self.invincible_count)):
+            if self.invincible_count[i] != -1:
+                self.invincible_count[i] += 1
+                if self.invincible_count[i] == FPS + 1: self.invincible_count[i] = -1
             
         self.player.Update(keys)
         for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
@@ -65,7 +65,7 @@ class Game:
                 self.bullets[i].pos):
                 if TEST_MODEL != -1: self.collides.append(i);
                 self.colliding[0] = True
-                if self.invinsible_count[0] == -1: self.invinsible_count[0] = 0
+                if self.invincible_count[0] == -1: self.invincible_count[0] = 0
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width * 1),
                 self.player.pos.y - round(self.player.pos.height * 1),
@@ -74,14 +74,14 @@ class Game:
                 self.bullets[i].pos):
                 if TEST_MODEL != -1: self.collides.append(i);
                 self.colliding[1] = True
-                if self.invinsible_count[1] == -1: self.invinsible_count[1] = 0
+                if self.invincible_count[1] == -1: self.invincible_count[1] = 0
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 if TEST_MODEL != -1: self.collides.append(i);
                 self.colliding[2] = True
-                if self.invinsible_count[2] == -1: self.invinsible_count[2] = 0
+                if self.invincible_count[2] == -1: self.invincible_count[2] = 0
         
-        for i in range(len(self.invinsible_count)):
-            if self.invinsible_count[i] == 0: self.score -= (i + 1) * FPS
+        for i in range(len(self.invincible_count)):
+            if self.invincible_count[i] == 0: self.score -= (i + 1) * FPS
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
@@ -95,7 +95,7 @@ class Game:
         for i in range(len(self.bullets)): self.bullets[i].Draw()
         for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
         draw_text(str(self.score), 8, 32, 32, WHITE)
-        if self.invinsible_count != -1: draw_text(str(self.invinsible_count), 8, 64, 32, DARKGRAY)
+        if self.invincible_count != -1: draw_text(str(self.invincible_count), 8, 64, 32, DARKGRAY)
 
         # minimap
         s = self.get_screen()
