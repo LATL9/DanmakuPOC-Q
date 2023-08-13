@@ -35,7 +35,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     models = [
         [nn.Sequential(
-            nn.Conv2d(1, 2, kernel_size=(25, 25), bias=False),
+            nn.Conv2d(2, 2, kernel_size=(25, 25), bias=False),
             nn.MaxPool2d((2, 2), stride=2),
             nn.Conv2d(2, 4, kernel_size=(1, 1), bias=False),
             nn.MaxPool2d((2, 2), stride=2),
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         # 4th quartile
         for i in range(NUM_MODELS * 3 // 4, NUM_MODELS):
             models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS] = nn.Sequential(
-                nn.Conv2d(1, 2, kernel_size=(25, 25), bias=False),
+                nn.Conv2d(2, 2, kernel_size=(25, 25), bias=False),
                 nn.MaxPool2d((2, 2), stride=2),
                 nn.Conv2d(2, 4, kernel_size=(1, 1), bias=False),
                 nn.MaxPool2d((2, 2), stride=2),

@@ -31,12 +31,9 @@ class Game:
             self.frame_count = FPS // 2 - 1 # used to fire bullets at a constant rate
         else: self.bullets = [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
 
-    
-
     def End(self): return self.score
     
     def Update(self, keys):
-        keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)] 
         if TEST_MODEL != -1: self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
@@ -59,6 +56,7 @@ class Game:
                         del self.bullets[i]
                         continue
 
+        for i in range(len(self.bullets)):
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width * 1.5),
                 self.player.pos.y - round(self.player.pos.height * 1.5),
@@ -106,6 +104,7 @@ class Game:
         for y in range(32):
             for x in range(32):
                 if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 255 ))
+                if s[1, y, x] == 0:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 64, 64, 64, 255 ))
 
     def new_bullet(self, b):
         if b == BULLET_RANDOM:
@@ -142,13 +141,16 @@ class Game:
 
     def get_screen(self):
         # creates 2D tensor (32x32) indicating location of bullets
-        # dimension indicates bullets (0 = no bullet, 1 = bullet)
+        # first dimension indicates bullets (0 = no bullet, 1 = bullet)
+        # second dimension indicates bounds (0 = out of bounds, 1 = in bounds)
         # a third of the dimensions of the screen around the player is used (therefore two thirds of the screen is used)
         # centre (top-left corner of (16, 16)) is player
-        s = torch.zeros(1, 32, 32).to(self.device)
+        s = torch.zeros(2, 32, 32).to(self.device)
+        s[1] = torch.ones(32, 32).to(self.device)
         p_x = self.player.pos.x + self.player.pos.width / 2
         p_y = self.player.pos.y + self.player.pos.height / 2
         
+        # first dimension
         for b in self.bullets:
             b_x = b.pos.x + b.pos.width / 2
             b_y = b.pos.y + b.pos.height / 2
@@ -157,5 +159,16 @@ class Game:
                 x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
                 y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
                 s[0, y, x] = 1
+
+        # second dimension
+        for x in range(-16, 16):
+            if p_x + x * (WIDTH / 3) / 16 < 0 or \
+                p_x + x * (WIDTH / 3) / 16 >= WIDTH:
+                for y in range(32):
+                    s[1][y][x + 16] = 0
+        for y in range(-16, 16):
+            if p_y + y * (HEIGHT / 3) / 16 < 0 or \
+                p_y + y * (HEIGHT / 3) / 16 >= HEIGHT:
+                s[1][y + 16] = torch.zeros(1, 32)
 
         return s
