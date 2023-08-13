@@ -6,8 +6,8 @@ HEIGHT = 800
 FPS = 30
 
 NUM_BULLETS = 12
-NUM_PROCESSES = 12
-NUM_MODELS = 120 # must be divisible by 4 (to divide into exact quarters)
+NUM_PROCESSES = 8
+NUM_MODELS = 64 # must be divisible by 4 (to divide into exact quarters)
 NUM_MODELS_PER_PROCESS = round(NUM_MODELS / NUM_PROCESSES)
 TRAIN_TIME = 20 # seconds
 MUTATION_POWER = 0.1 # measure mutations change model

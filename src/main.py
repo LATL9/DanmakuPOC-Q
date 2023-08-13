@@ -30,6 +30,7 @@ def test(fitnesses, device, seed, indexes, _models): # _ prevents naming conflic
     for i in range(NUM_MODELS_PER_PROCESS):
         m = NNModel(device, seed, indexes[i], _models[i])
         fitnesses[indexes[i]] = m.train()
+        print("{} / {}".format(len(fitnesses), NUM_MODELS), end='\r')
 
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
