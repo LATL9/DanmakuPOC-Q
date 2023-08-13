@@ -24,10 +24,15 @@ class Game:
     def __init__(self, device, seed):
         self.device = device
         self.rng = random.Random(seed)
-        self.bullets = [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
         self.player = Player(WIDTH // 2, HEIGHT - 64, 24)
         self.score = 0
+
+        if BULLET_TYPE == BULLET_HONE:
+            self.frame_count = FPS // 2 - 1 # used to fire bullets at a constant rate
+        else: self.bullets = [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
+
     
+
     def End(self): return self.score
     
     def Update(self, keys):
@@ -42,13 +47,18 @@ class Game:
                 if self.invinsible_count[i] == FPS + 1: self.invinsible_count[i] = -1
             
         self.player.Update(keys)
-        for i in range(len(self.bullets)): 
+        for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
             self.bullets[i].Update()
             if self.bullets[i].pos.x <= self.bullets[i].pos.width * -1 or \
                 self.bullets[i].pos.x >= WIDTH or \
                 self.bullets[i].pos.y <= self.bullets[i].pos.height * -1 or \
                 self.bullets[i].pos.y >= HEIGHT:
-                    self.bullets[i] = self.new_bullet(BULLET_TYPE)
+                    if BULLET_TYPE == BULLET_RANDOM:
+                        self.bullets[i] = self.new_bullet(BULLET_TYPE)
+                    elif BULLET_TYPE == BULLET_HONE:
+                        del self.bullets[i]
+                        continue
+
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width * 1.5),
                 self.player.pos.y - round(self.player.pos.height * 1.5),
@@ -74,6 +84,12 @@ class Game:
         
         for i in range(len(self.invinsible_count)):
             if self.invinsible_count[i] == 0: self.score -= (i + 1) * FPS
+
+        if BULLET_TYPE == BULLET_HONE:
+            self.frame_count += 1
+            if self.frame_count == FPS // 2:
+                self.frame_count = 0
+                self.bullets.append(self.new_bullet(BULLET_HONE))
 
     def Draw(self):
         clear_background(BLACK)
@@ -125,15 +141,21 @@ class Game:
         return False
 
     def get_screen(self):
+        # creates 2D tensor (32x32) indicating location of bullets
         # dimension indicates bullets (0 = no bullet, 1 = bullet)
-        s = torch.zeros(1, 33, 33).to(self.device)
+        # a third of the dimensions of the screen around the player is used (therefore two thirds of the screen is used)
+        # centre (top-left corner of (16, 16)) is player
+        s = torch.zeros(1, 32, 32).to(self.device)
+        p_x = self.player.pos.x + self.player.pos.width / 2
+        p_y = self.player.pos.y + self.player.pos.height / 2
         
-        # centre pixel (16, 16) is player
         for b in self.bullets:
-            if abs(b.pos.x - self.player.pos.x) <= WIDTH // 2 and \
-                abs(b.pos.y - self.player.pos.y) <= HEIGHT// 2:
-                x = math.floor((((b.pos.x - self.player.pos.x) / (WIDTH // 2)) + 1) * 16)
-                y = math.floor((((b.pos.y - self.player.pos.y) / (HEIGHT // 2)) + 1) * 16)
+            b_x = b.pos.x + b.pos.width / 2
+            b_y = b.pos.y + b.pos.height / 2
+            if b_x - p_x >= WIDTH / -3 and b_x - p_x < WIDTH / 3 and \
+                b_y - p_y >= HEIGHT / -3 and b_y - p_y < HEIGHT / 3:
+                x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
+                y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
                 s[0, y, x] = 1
 
         return s
