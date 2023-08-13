@@ -24,21 +24,14 @@ class Game:
     def __init__(self, device, seed):
         self.device = device
         self.rng = random.Random(seed)
-        self.bullets = [
-            Bullet(
-                self.rng.randint(0, WIDTH - 1),
-                0,
-                12,
-                round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, 240 // FPS),
-                self.rng.randint(1, 480 // FPS)
-            ) for i in range(NUM_BULLETS)
-        ]
+        self.bullets = [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
         self.player = Player(WIDTH // 2, HEIGHT - 64, 24)
         self.score = 0
     
     def End(self): return self.score
     
     def Update(self, keys):
+        keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)] 
         if TEST_MODEL != -1: self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
@@ -55,13 +48,7 @@ class Game:
                 self.bullets[i].pos.x >= WIDTH or \
                 self.bullets[i].pos.y <= self.bullets[i].pos.height * -1 or \
                 self.bullets[i].pos.y >= HEIGHT:
-                    self.bullets[i] = Bullet(
-                        self.rng.randint(0, WIDTH - 1),
-                        0,
-                        12,
-                        round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, 240 // FPS),
-                        self.rng.randint(1, 480 // FPS)
-                    )
+                    self.bullets[i] = self.new_bullet(BULLET_TYPE)
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width * 1.5),
                 self.player.pos.y - round(self.player.pos.height * 1.5),
@@ -103,6 +90,30 @@ class Game:
         for y in range(32):
             for x in range(32):
                 if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 255 ))
+
+    def new_bullet(self, b):
+        if b == BULLET_RANDOM:
+            return Bullet(
+                self.rng.randint(0, WIDTH - 1),
+                -11,
+                12,
+                round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, 240 // FPS),
+                self.rng.randint(1, 480 // FPS)
+            )
+        elif b == BULLET_HONE:
+            x = self.rng.randint(0, WIDTH - 1)
+            # maths means all bullets will move at same speed regardless of direction
+            # opp from Pythagoras' theorem not specified as opp = player y - 0 = player y
+            adj = self.player.pos.x - x
+            hyp = pow(pow(adj, 2) + pow(self.player.pos.y + self.player.pos.height / 2, 2), 0.5)
+            return Bullet(
+                x,
+                -11,
+                12,
+                adj * BULLET_HONE_SPEED / hyp,
+                self.player.pos.y * BULLET_HONE_SPEED / hyp
+            )
+        return Bullet(-1, -1, 1, -1, -1)
 
     def is_colliding(self, r1, r2):
         if (r1.x == r2.x or \
