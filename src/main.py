@@ -6,50 +6,47 @@ from model import *
 from pyray import *
 import os
 import time
-import threading
 
 def train():
-    fitnesses = {}
-    threads = []
+    jobs = []
+    manager = mp.Manager()
+    fitnesses = manager.dict()
    
     for i in range(NUM_PROCESSES):
-        threads.append(ThreadWithResult(target=test, args=(device, seed, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)))
+        jobs.append(mp.Process(target=test, args=(fitnesses, device, seed, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)))
     if TEST_MODEL == -1:
-        for i in range(len(threads)): 
-            threads[i].start()
-        for i in range(len(threads)):
-            threads[i].join()
-            fitnesses = {**fitnesses, **threads[i].result}
+        for i in range(len(jobs)): 
+            jobs[i].start()
+        for i in range(len(jobs)):
+            jobs[i].join()
     else:
         # if testing, only test thread containing specified model
-        threads[TEST_MODEL // NUM_MODELS_PER_PROCESS].start()
-        threads[TEST_MODEL // NUM_MODELS_PER_PROCESS].join()
-        fitnesses = {**fitnesses, **threads[TEST_MODEL // NUM_MODELS_PER_PROCESS].result}
+        jobs[TEST_MODEL // NUM_MODELS_PER_PROCESS].start()
+        jobs[TEST_MODEL // NUM_MODELS_PER_PROCESS].join()
 
     return fitnesses
 
-def test(device, seed, indexes, _models): # _ presents naming conflict
-    r = {}
+def test(fitnesses, device, seed, indexes, _models): # _ prevents naming conflict
     for i in range(NUM_MODELS_PER_PROCESS):
         m = NNModel(device, seed, indexes[i], _models[i])
-        r[indexes[i]] = m.train()
-    return r
+        fitnesses[indexes[i]] = m.train()
 
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     models = [
         [nn.Sequential(
-            nn.Conv2d(1, 1, 16, 1, 2),
-            nn.MaxPool2d(2),
-            nn.Conv2d(1, 1, 4, 1, 2),
-            nn.MaxPool2d(3),
-            nn.Linear(4, 1)
+            nn.Conv2d(1, 2, kernel_size=(26, 26), bias=False),
+            nn.MaxPool2d((2, 2), stride=2),
+            nn.Conv2d(2, 4, kernel_size=(1, 1), bias=False),
+            nn.MaxPool2d((2, 2), stride=2),
+            nn.Flatten(0, -1),
+            nn.Linear(16, 4, bias=False)
         ).to(device) for i in range(NUM_MODELS_PER_PROCESS)]
         for j in range(NUM_PROCESSES)
     ]
 
     try:
-        checkpoint = torch.load("models/models.pt")
+        checkpoint = torch.load("models/models.pt", map_location=device)
         epoch = checkpoint['epoch']
         for i in range(NUM_MODELS):
             models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].load_state_dict(checkpoint['model{}_state_dict'.format(i)])
@@ -102,11 +99,12 @@ if __name__ == '__main__':
         # 4th quartile
         for i in range(NUM_MODELS * 3 // 4, NUM_MODELS):
             models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS] = nn.Sequential(
-                nn.Conv2d(1, 1, 16, 1, 2),
-                nn.MaxPool2d(2),
-                nn.Conv2d(1, 1, 4, 1, 2),
-                nn.MaxPool2d(3),
-                nn.Linear(4, 1)
+                nn.Conv2d(1, 2, kernel_size=(26, 26), bias=False),
+                nn.MaxPool2d((2, 2), stride=2),
+                nn.Conv2d(2, 4, kernel_size=(1, 1), bias=False),
+                nn.MaxPool2d((2, 2), stride=2),
+                nn.Flatten(0, -1),
+                nn.Linear(16, 4, bias=False)
             ).to(device)
 
         log.write("{}, {}, {}, {}, {}\n".format(

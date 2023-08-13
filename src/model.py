@@ -39,7 +39,7 @@ class NNModel:
 
         m = 0
         for i in range(4):
-            if float(x[0][i]) > float(x[0][m]): m = i
+            if float(x[i]) > float(x[m]): m = i
         keys[m] = 1
 
         if self.index == -1:
