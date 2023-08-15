@@ -19,6 +19,7 @@ class Game:
     colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
     still_colliding = [False, False, False]
     invincible_count = [-1, -1, -1] # -1 = not invincible, 0 to (FPS - 1) = invincible frame (FPS is end)
+    untouched_count = -1 # -1 = touching bullets (any hitbox layer), 0 to (FPS - 1) = not touching, FPS = end and point reward
     if TEST_MODEL != -1: collides = [] # shows collisions (used for demonstration, not in training)
 
     def __init__(self, device, seed):
@@ -35,14 +36,20 @@ class Game:
     def End(self): return self.score
     
     def Update(self, keys):
+        keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)]
         if TEST_MODEL != -1: self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
-        
+
+        invincible = False
         for i in range(len(self.invincible_count)):
             if self.invincible_count[i] != -1:
                 self.invincible_count[i] += 1
                 if self.invincible_count[i] == FPS + 1: self.invincible_count[i] = -1
+                invincible = True
+        if invincible: self.untouched_count = 0
+        else:
+            if self.untouched_count < FPS + 1: self.untouched_count += 1
             
         self.player.Update(keys)
         for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
@@ -51,8 +58,7 @@ class Game:
                 self.bullets[i].pos.x >= WIDTH or \
                 self.bullets[i].pos.y <= self.bullets[i].pos.height * -1 or \
                 self.bullets[i].pos.y >= HEIGHT:
-                    if BULLET_TYPE == BULLET_RANDOM:
-                        self.bullets[i] = self.new_bullet(BULLET_TYPE)
+                    if BULLET_TYPE == BULLET_RANDOM: self.bullets[i] = self.new_bullet(BULLET_TYPE)
                     elif BULLET_TYPE == BULLET_HONE:
                         del self.bullets[i]
                         continue
@@ -64,25 +70,29 @@ class Game:
                 self.player.pos.width * 5,
                 self.player.pos.height * 5),
                 self.bullets[i].pos):
-                if TEST_MODEL != -1: self.collides.append(i);
                 self.colliding[0] = True
                 if self.invincible_count[0] == -1: self.invincible_count[0] = 0
+                self.untouched_count = 0
+                if TEST_MODEL != -1: self.collides.append(i);
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width * 1),
                 self.player.pos.y - round(self.player.pos.height * 1),
                 self.player.pos.width * 3,
                 self.player.pos.height * 3),
                 self.bullets[i].pos):
-                if TEST_MODEL != -1: self.collides.append(i);
                 self.colliding[1] = True
                 if self.invincible_count[1] == -1: self.invincible_count[1] = 0
-            if self.is_colliding(self.player.pos, self.bullets[i].pos):
+                self.untouched_count = 0
                 if TEST_MODEL != -1: self.collides.append(i);
+            if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 self.colliding[2] = True
                 if self.invincible_count[2] == -1: self.invincible_count[2] = 0
+                self.untouched_count = 0
+                if TEST_MODEL != -1: self.collides.append(i);
         
         for i in range(len(self.invincible_count)):
             if self.invincible_count[i] == 0: self.score -= (i + 1) * FPS
+        if self.untouched_count == FPS + 1: self.score += 1
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
@@ -100,12 +110,12 @@ class Game:
 
         # minimap
         s = self.get_screen()
-        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 255 ))
-        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 255 ))
+        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 192 ))
+        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 192 ))
         for y in range(32):
             for x in range(32):
-                if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 255 ))
-                if s[1, y, x] == 0:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 64, 64, 64, 255 ))
+                if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
+                if s[1, y, x] == 0:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 64, 64, 64, 192 ))
 
     def new_bullet(self, b):
         if b == BULLET_RANDOM:
@@ -165,8 +175,7 @@ class Game:
         for x in range(-16, 16):
             if p_x + x * (WIDTH / 3) / 16 < 0 or \
                 p_x + x * (WIDTH / 3) / 16 >= WIDTH:
-                for y in range(32):
-                    s[1][y][x + 16] = 0
+                for y in range(32): s[1][y][x + 16] = 0
         for y in range(-16, 16):
             if p_y + y * (HEIGHT / 3) / 16 < 0 or \
                 p_y + y * (HEIGHT / 3) / 16 >= HEIGHT:
