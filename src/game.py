@@ -28,8 +28,9 @@ class Game:
         self.score = 0
 
         if BULLET_TYPE == BULLET_HONE:
-            self.frame_count = FPS // 2 - 1 # used to fire bullets at a constant rate
-        else: self.bullets = [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
+            self.frame_count = FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
+        else:
+            self.bullets = [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
 
     def End(self): return self.score
     
@@ -85,7 +86,7 @@ class Game:
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
-            if self.frame_count == FPS // 2:
+            if self.frame_count == FPS // NUM_BULLETS:
                 self.frame_count = 0
                 self.bullets.append(self.new_bullet(BULLET_HONE))
 

@@ -120,7 +120,8 @@ if __name__ == '__main__':
         rankings.write("{}, {}\n".format(epoch, ", ".join(["{}, {}".format(x, fitnesses[x]) for x in fitnesses])))
         rankings.flush()
 
-        if epoch % 5 == 0:
+        #if epoch % 5 == 0:
+        if True:
             fitnesses = {k: v for k, v in sorted(fitnesses.items(), key=lambda item: item[1], reverse=True)}
             checkpoint = {'epoch': epoch}
             for i in range(NUM_MODELS):
