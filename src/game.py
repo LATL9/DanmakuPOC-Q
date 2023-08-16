@@ -25,8 +25,8 @@ class Game:
     def __init__(self, device, seed):
         self.device = device
         self.rng = random.Random(seed)
-        if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, 24)
-        else: self.player = Player(WIDTH // 2, HEIGHT - 64, 24)
+        if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
+        else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
         self.score = 0
 
         if BULLET_TYPE == BULLET_HONE:
@@ -122,8 +122,8 @@ class Game:
         if b == BULLET_RANDOM:
             return Bullet(
                 self.rng.randint(0, WIDTH - 1),
-                -11,
-                12,
+                BULLET_SIZE * -1 + 1,
+                BULLET_SIZE,
                 round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, 240 // FPS),
                 self.rng.randint(1, 480 // FPS)
             )
@@ -147,7 +147,7 @@ class Game:
                 if origin_edge == 0:
                     hyp = pow(pow(adj, 2) + pow(p_y, 2), 0.5)
 
-                    b_y = -11
+                    b_y = BULLET_SIZE * -1 + 1
                     v_y = p_y * BULLET_HONE_SPEED / hyp
                 else: # 1
                     hyp = pow(pow(adj, 2) + pow(p_y - HEIGHT, 2), 0.5)
@@ -163,7 +163,7 @@ class Game:
                 if origin_edge == 2:
                     hyp = pow(pow(adj, 2) + pow(p_x, 2), 0.5)
 
-                    b_x = -11
+                    b_x = BULLET_SIZE * -1 + 1
                     v_x = p_x * BULLET_HONE_SPEED / hyp
                 else: # 3
                     hyp = pow(pow(adj, 2) + pow(p_x - WIDTH, 2), 0.5)
@@ -172,7 +172,7 @@ class Game:
                     v_x = (p_x - WIDTH) * BULLET_HONE_SPEED / hyp
                 v_y = adj * BULLET_HONE_SPEED / hyp
 
-            return Bullet(b_x, b_y, 12, v_x, v_y)
+            return Bullet(b_x, b_y, BULLET_SIZE, v_x, v_y)
 
     def is_colliding(self, r1, r2):
         if (r1.x == r2.x or \
