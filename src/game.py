@@ -25,7 +25,8 @@ class Game:
     def __init__(self, device, seed):
         self.device = device
         self.rng = random.Random(seed)
-        self.player = Player(WIDTH // 2, HEIGHT - 64, 24)
+        if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, 24)
+        else: self.player = Player(WIDTH // 2, HEIGHT - 64, 24)
         self.score = 0
 
         if BULLET_TYPE == BULLET_HONE:
