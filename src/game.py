@@ -37,6 +37,7 @@ class Game:
     def End(self): return self.score
     
     def Update(self, keys):
+        keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)]
         if TEST_MODEL != -1: self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
@@ -127,19 +128,51 @@ class Game:
                 self.rng.randint(1, 480 // FPS)
             )
         elif b == BULLET_HONE:
-            x = self.rng.randint(0, WIDTH - 1)
+            # edge that bullet is fired from:
+            # 0 = top, 1 = bottom, 2 = left-side, 3 = right-side
+            origin_edge = self.rng.randint(0, 3)
+            # need centre player pos instead of top-left corner
+            p_x = self.player.pos.x + self.player.pos.width / 2
+            p_y = self.player.pos.y + self.player.pos.height / 2
+
             # maths means all bullets will move at same speed regardless of direction
             # opp from Pythagoras' theorem not specified as opp = player y - 0 = player y
-            adj = self.player.pos.x - x
-            hyp = pow(pow(adj, 2) + pow(self.player.pos.y + self.player.pos.height / 2, 2), 0.5)
-            return Bullet(
-                x,
-                -11,
-                12,
-                adj * BULLET_HONE_SPEED / hyp,
-                self.player.pos.y * BULLET_HONE_SPEED / hyp
-            )
-        return Bullet(-1, -1, 1, -1, -1)
+            x = 0
+            y = 0
+            if origin_edge < 2: # 0, 1
+                x = self.rng.randint(0, WIDTH - self.player.pos.width // 2 - 1)
+                adj = p_x - x
+
+                b_x = x
+                if origin_edge == 0:
+                    hyp = pow(pow(adj, 2) + pow(p_y, 2), 0.5)
+
+                    b_y = -11
+                    v_y = p_y * BULLET_HONE_SPEED / hyp
+                else: # 1
+                    hyp = pow(pow(adj, 2) + pow(p_y - HEIGHT, 2), 0.5)
+
+                    b_y = HEIGHT - 1
+                    v_y = (p_y - HEIGHT) * BULLET_HONE_SPEED / hyp
+                v_x = adj * BULLET_HONE_SPEED / hyp
+            else: # 2, 3
+                y = self.rng.randint(0, HEIGHT - self.player.pos.height // 2 - 1)
+                adj = p_y - y
+
+                b_y = y
+                if origin_edge == 2:
+                    hyp = pow(pow(adj, 2) + pow(p_x, 2), 0.5)
+
+                    b_x = -11
+                    v_x = p_x * BULLET_HONE_SPEED / hyp
+                else: # 3
+                    hyp = pow(pow(adj, 2) + pow(p_x - WIDTH, 2), 0.5)
+
+                    b_x = WIDTH - 1
+                    v_x = (p_x - WIDTH) * BULLET_HONE_SPEED / hyp
+                v_y = adj * BULLET_HONE_SPEED / hyp
+
+            return Bullet(b_x, b_y, 12, v_x, v_y)
 
     def is_colliding(self, r1, r2):
         if (r1.x == r2.x or \
@@ -163,6 +196,7 @@ class Game:
         
         # first dimension
         for b in self.bullets:
+            # for bullets as well
             b_x = b.pos.x + b.pos.width / 2
             b_y = b.pos.y + b.pos.height / 2
             if b_x - p_x >= WIDTH / -3 and b_x - p_x < WIDTH / 3 and \
