@@ -100,12 +100,12 @@ if __name__ == '__main__':
         # 4th quartile
         for i in range(NUM_MODELS * 3 // 4, NUM_MODELS):
             models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS] = nn.Sequential(
-                nn.Conv2d(4, 8, kernel_size=(9, 9), bias=False),
-                nn.MaxPool2d((2, 2), stride=2),
-                nn.Conv2d(8, 16, kernel_size=(11, 11), bias=False),
-                nn.MaxPool2d((2, 2), stride=2),
+                nn.Conv2d(2, 4, kernel_size=(9, 9), padding=4, bias=False),
+                nn.MaxPool2d((4, 4), stride=4),
+                nn.Conv2d(4, 8, kernel_size=(5, 5), padding=2, bias=False),
+                nn.MaxPool2d((4, 4), stride=4),
                 nn.Flatten(0, -1),
-                nn.Linear(16, 4, bias=False)
+                nn.Linear(32, 4, bias=False)
             ).to(device)
 
         log.write("{}, {}, {}, {}, {}\n".format(
