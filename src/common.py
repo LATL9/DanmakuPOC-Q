@@ -1,6 +1,6 @@
 import torch.multiprocessing as mp
 
-TEST_MODEL = -1 # -1 = train models, dont test; 0- = test xth model by index
+TEST_MODEL = 18 # -1 = train models, dont test; 0- = test xth model by index
 WIDTH = 800
 HEIGHT = 800
 FPS = 30 # must be at least 4 (input tensor needs information from a quarter of a second, requiring FPS to be divided by 4 to get a number more than 0)
