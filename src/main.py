@@ -50,7 +50,7 @@ if __name__ == '__main__':
         checkpoint = torch.load("models/models.pt", map_location=device)
         epoch = checkpoint['epoch']
         for i in range(NUM_MODELS):
-            models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].load_state_dict(checkpoint['model{}_state_dict'.format(i)])
+            models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].load_state_dict(checkpoint['model{}_state_dict'.format(i)]).to(device)
 
         print("Restarting from checkpoint at epoch {}.".format(epoch))
         log = open("log.csv", 'a')
