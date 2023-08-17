@@ -1,6 +1,6 @@
 import torch.multiprocessing as mp
 
-TEST_MODEL = -1 # -1 = train models, dont test; 0- = test xth model by index
+TEST_MODEL = 1 # -1 = train models, dont test; 0- = test xth model by index
 WIDTH = 800
 HEIGHT = 800
 FPS = 30 # must be at least 4 (input tensor needs information from a quarter of a second, requiring FPS to be divided by 4 to get a number more than 0)
@@ -8,9 +8,9 @@ FPS = 30 # must be at least 4 (input tensor needs information from a quarter of 
 BULLET_SIZE = 12
 PLAYER_SIZE = 12
 
-NUM_BULLETS = 1
+NUM_BULLETS = 2
 NUM_PROCESSES = 8
-NUM_MODELS = 48 # must be divisible by 4 (to divide into exact quarters)
+NUM_MODELS = 192 # must be divisible by 4 (to divide into exact quarters)
 NUM_MODELS_PER_PROCESS = round(NUM_MODELS / NUM_PROCESSES)
 TRAIN_TIME = 20 # seconds
 MUTATION_POWER = 0.1 # measure mutations change model

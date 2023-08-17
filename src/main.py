@@ -33,7 +33,7 @@ def test(fitnesses, device, seed, indexes, _models): # _ prevents naming conflic
         print("{} / {}".format(len(fitnesses), NUM_MODELS), end='\r')
 
 if __name__ == '__main__':
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     models = [
         [nn.Sequential(
             nn.Conv2d(2, 4, kernel_size=(9, 9), padding=4, bias=False),
@@ -50,7 +50,8 @@ if __name__ == '__main__':
         checkpoint = torch.load("models/models.pt", map_location=device)
         epoch = checkpoint['epoch']
         for i in range(NUM_MODELS):
-            models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].load_state_dict(checkpoint['model{}_state_dict'.format(i)]).to(device)
+            models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].load_state_dict(checkpoint['model{}_state_dict'.format(i)])
+            models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].to(device)
 
         print("Restarting from checkpoint at epoch {}.".format(epoch))
         log = open("log.csv", 'a')
@@ -82,7 +83,7 @@ if __name__ == '__main__':
         
         median = vals[((NUM_MODELS * 3 // 4) - 1) // 2]
         quartile_1_avg = sum(vals[:NUM_MODELS // 4]) // (NUM_MODELS // 4)
-        quartile_3_avg = sum(vals[NUM_MODELS * 3 // 4:]) // (NUM_MODELS // 4)
+        quartile_3_avg = sum(vals[NUM_MODELS // 2:NUM_MODELS * 3 // 4]) // (NUM_MODELS // 4)
 
         # 2nd quartile
         for i in range(NUM_MODELS // 4, NUM_MODELS // 2):

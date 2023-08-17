@@ -37,7 +37,6 @@ class Game:
     def End(self): return self.score
     
     def Update(self, keys):
-        keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)]
         if TEST_MODEL != -1: self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
@@ -137,13 +136,10 @@ class Game:
 
             # maths means all bullets will move at same speed regardless of direction
             # opp from Pythagoras' theorem not specified as opp = player y - 0 = player y
-            x = 0
-            y = 0
             if origin_edge < 2: # 0, 1
-                x = self.rng.randint(0, WIDTH - self.player.pos.width // 2 - 1)
-                adj = p_x - x
+                b_x = self.rng.randint(0, WIDTH - 1)
+                adj = p_x - b_x
 
-                b_x = x
                 if origin_edge == 0:
                     hyp = pow(pow(adj, 2) + pow(p_y, 2), 0.5)
 
@@ -156,10 +152,9 @@ class Game:
                     v_y = (p_y - HEIGHT) * BULLET_HONE_SPEED / hyp
                 v_x = adj * BULLET_HONE_SPEED / hyp
             else: # 2, 3
-                y = self.rng.randint(0, HEIGHT - self.player.pos.height // 2 - 1)
-                adj = p_y - y
+                b_y = self.rng.randint(0, HEIGHT - 1)
+                adj = p_y - b_y
 
-                b_y = y
                 if origin_edge == 2:
                     hyp = pow(pow(adj, 2) + pow(p_x, 2), 0.5)
 
