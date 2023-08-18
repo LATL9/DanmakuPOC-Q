@@ -73,6 +73,7 @@ class Game:
     def End(self): return self.score
     
     def Update(self, keys):
+        keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)]
         if TEST_MODEL != -1:
             self.keys = keys
             self.collides = []
@@ -138,7 +139,7 @@ class Game:
                 self.frame_count = 0
                 self.bullets.append(self.new_bullet(BULLET_HONE))
 
-    def Draw(self, pred):
+    def Draw(self, l_2, pred):
         clear_background(BLACK)
         
         self.player.Draw()
@@ -152,6 +153,12 @@ class Game:
         for y in range(32):
             for x in range(32):
                 if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
+        for i in range(l_2.shape[0]):
+            for y in range(l_2.shape[1]):
+                for x in range(l_2.shape[2]):
+                    c = round((max(min(float(l_2[i, y, x]), 1), -1) + 1) * 127.5)
+                    col = Color( c, c, c, 192 )
+                    draw_rectangle(256 + x * 8, i * 128 + y * 8, 8, 8, col)
 
         draw_text(str(self.score), 8, 32, 32, WHITE)
         if self.invincible_count != -1: draw_text(str(self.invincible_count), 8, 64, 32, DARKGRAY)
