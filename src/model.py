@@ -35,19 +35,9 @@ class NNModel:
         
     def test(self, x):
         keys = [0 for i in range(4)]
-        x = self.model(x)
+        y = self.model(x)
 
-        m = 0
         for i in range(4):
-            if float(x[i]) > float(x[m]): m = i
-        keys[m] = 1
-
-        if self.index == -1:
-            print({
-                0: "Up",
-                1: "Down",
-                2: "Left",
-                3: "Right",
-            }[m])
+            if float(y[i]) > 0: keys[i] = 1
 
         return keys
