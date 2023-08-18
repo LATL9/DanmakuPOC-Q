@@ -29,14 +29,51 @@ class Game:
         else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
         self.score = 0
 
+        # edge barrier
+        self.bullets = []
+        self.bullets.append(Bullet(
+            0,
+            0,
+            BULLET_SIZE,
+            0,
+            0
+        ))
+        self.bullets[0].pos.width = WIDTH
+        self.bullets.append(Bullet(
+            0,
+            HEIGHT - BULLET_SIZE,
+            BULLET_SIZE,
+            0,
+            0
+        ))
+        self.bullets[1].pos.width = WIDTH
+        self.bullets.append(Bullet(
+            0,
+            BULLET_SIZE,
+            BULLET_SIZE,
+            0,
+            0
+        ))
+        self.bullets[2].pos.height = HEIGHT - BULLET_SIZE * 2
+        self.bullets.append(Bullet(
+            WIDTH - BULLET_SIZE,
+            BULLET_SIZE,
+            BULLET_SIZE,
+            0,
+            0
+        ))
+        self.bullets[3].pos.height = HEIGHT - BULLET_SIZE * 2
+
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count = FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
         else:
-            self.bullets = [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
+            for i in range(NUM_BULLETS):
+                self.bullets.append(self.new_bullet(BULLET_TYPE))
 
     def End(self): return self.score
     
     def Update(self, keys):
+        keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)]
         if TEST_MODEL != -1: self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
@@ -115,7 +152,6 @@ class Game:
         for y in range(32):
             for x in range(32):
                 if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
-                if s[1, y, x] == 0:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 64, 64, 64, 192 ))
 
     def new_bullet(self, b):
         if b == BULLET_RANDOM:
@@ -174,8 +210,8 @@ class Game:
             (r1.x < r2.x and r1.x + r1.width > r2.x) or \
             (r1.x > r2.x and r2.x + r2.width > r1.x)) and \
             (r1.y == r2.y or \
-            (r1.y < r2.y and r1.y + r1.width > r2.y) or \
-            (r1.y > r2.y and r2.y + r2.width > r1.y)): return True
+            (r1.y < r2.y and r1.y + r1.height > r2.y) or \
+            (r1.y > r2.y and r2.y + r2.height > r1.y)): return True
         return False
 
     def get_screen(self):
@@ -190,15 +226,32 @@ class Game:
         p_y = self.player.pos.y + self.player.pos.height / 2
         
         # first dimension
-        for b in self.bullets:
+        for i in range(4, len(self.bullets)):
             # for bullets as well
-            b_x = b.pos.x + b.pos.width / 2
-            b_y = b.pos.y + b.pos.height / 2
+            b_x = self.bullets[i].pos.x + self.bullets[i].pos.width / 2
+            b_y = self.bullets[i].pos.y + self.bullets[i].pos.height / 2
             if b_x - p_x >= WIDTH / -3 and b_x - p_x < WIDTH / 3 and \
                 b_y - p_y >= HEIGHT / -3 and b_y - p_y < HEIGHT / 3:
                 x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
                 y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
                 s[0, y, x] = 1
+
+        # barrier (previous for loop for bullets only draws one pixel, while barrier uses many pixels)
+        # -1 is used in if as barrier is drawn to the side of l_x, r_x, l_y, and r_y, not at that location
+        if BULLET_SIZE - 1 - p_x >= WIDTH / -3 and BULLET_SIZE - 1 - p_x < WIDTH / 3:
+            l_x = math.floor((((BULLET_SIZE - p_x) / (WIDTH / 3)) + 1) * 16)
+            for x in range(l_x):
+                for y in range(32): s[0][y][x] = 1
+        if WIDTH - 1 - p_x >= WIDTH / -3 and WIDTH - 1 - p_x < WIDTH / 3:
+            r_x = math.floor((((WIDTH - BULLET_SIZE - p_x) / (WIDTH / 3)) + 1) * 16)
+            for x in range(r_x, 32):
+                for y in range(32): s[0][y][x] = 1
+        if BULLET_SIZE - 1 - p_y >= HEIGHT / -3 and BULLET_SIZE - 1 - p_y < HEIGHT / 3:
+            l_y = math.floor((((BULLET_SIZE - p_y) / (HEIGHT / 3)) + 1) * 16)
+            for y in range(l_y): s[0][y] = torch.ones(1, 32)
+        if HEIGHT - 1 - p_y >= HEIGHT / -3 and HEIGHT - 1 - p_y < HEIGHT / 3:
+            r_y = math.floor((((HEIGHT - BULLET_SIZE - p_y) / (HEIGHT / 3)) + 1) * 16)
+            for y in range(r_y, 32): s[0][y] = torch.ones(1, 32)
 
         # second dimension
         for x in range(-16, 16):
