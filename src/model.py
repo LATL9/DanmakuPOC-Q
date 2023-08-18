@@ -9,7 +9,7 @@ class NNModel:
     index = -1
     g = -1
     model = -1
-    y = -1
+    pred = -1
 
     def __init__(self, device, seed, index, model):
         self.device = device
@@ -28,16 +28,22 @@ class NNModel:
 
             if self.index == TEST_MODEL:
                 begin_drawing()
-                self.g.Draw(self.y)
+                self.g.Draw(self.pred)
                 end_drawing()
 
         return self.g.score
         
     def test(self, x):
         keys = [0 for i in range(4)]
-        self.y = self.model(x)
+        y = self.model(x)
+        self.pred = [float(f) for f in y]
 
-        for i in range(4):
-            if float(self.y[i]) > 0: keys[i] = 1
+        for i in range(len(self.pred)):
+            if self.pred[i] > 0: keys[i] = 1
+        # prevents model from pressing opposite keys (wouldn't move either direction)
+        for i in range(0, len(keys), 2):
+            if keys[i] == 1 and keys[i + 1] == 1:
+                if self.pred[i] > self.pred[i + 1]: keys[i + 1] = 0
+                else: keys[i] = 0
 
         return keys
