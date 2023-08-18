@@ -73,7 +73,6 @@ class Game:
     def End(self): return self.score
     
     def Update(self, keys):
-        #keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)]
         if TEST_MODEL != -1:
             self.keys = keys
             self.collides = []
