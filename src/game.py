@@ -73,7 +73,6 @@ class Game:
     def End(self): return self.score
     
     def Update(self, keys):
-        keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)]
         if TEST_MODEL != -1: self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
@@ -220,8 +219,7 @@ class Game:
         # second dimension indicates bounds (0 = out of bounds, 1 = in bounds)
         # a third of the dimensions of the screen around the player is used (therefore two thirds of the screen is used)
         # centre (top-left corner of (16, 16)) is player
-        s = torch.zeros(2, 32, 32).to(self.device)
-        s[1] = torch.ones(32, 32).to(self.device)
+        s = torch.zeros(1, 32, 32).to(self.device)
         p_x = self.player.pos.x + self.player.pos.width / 2
         p_y = self.player.pos.y + self.player.pos.height / 2
         
@@ -234,7 +232,7 @@ class Game:
                 b_y - p_y >= HEIGHT / -3 and b_y - p_y < HEIGHT / 3:
                 x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
                 y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
-                s[0, y, x] = 1
+                s[0][y][x] = 1
 
         # barrier (previous for loop for bullets only draws one pixel, while barrier uses many pixels)
         # -1 is used in if as barrier is drawn to the side of l_x, r_x, l_y, and r_y, not at that location
@@ -252,15 +250,5 @@ class Game:
         if HEIGHT - 1 - p_y >= HEIGHT / -3 and HEIGHT - 1 - p_y < HEIGHT / 3:
             r_y = math.floor((((HEIGHT - BULLET_SIZE - p_y) / (HEIGHT / 3)) + 1) * 16)
             for y in range(r_y, 32): s[0][y] = torch.ones(1, 32)
-
-        # second dimension
-        for x in range(-16, 16):
-            if p_x + x * (WIDTH / 3) / 16 < 0 or \
-                p_x + x * (WIDTH / 3) / 16 >= WIDTH:
-                for y in range(32): s[1][y][x + 16] = 0
-        for y in range(-16, 16):
-            if p_y + y * (HEIGHT / 3) / 16 < 0 or \
-                p_y + y * (HEIGHT / 3) / 16 >= HEIGHT:
-                s[1][y + 16] = torch.zeros(1, 32)
 
         return s

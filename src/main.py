@@ -36,12 +36,18 @@ if __name__ == '__main__':
     device = torch.device("cpu")
     models = [
         [nn.Sequential(
-            nn.Conv2d(2, 4, kernel_size=(9, 9), padding=4, bias=False),
-            nn.MaxPool2d((4, 4), stride=4),
-            nn.Conv2d(4, 8, kernel_size=(5, 5), padding=2, bias=False),
-            nn.MaxPool2d((4, 4), stride=4),
+            nn.ConstantPad2d(4, 1),
+            nn.Conv2d(1, 2, kernel_size=(9, 9)),
+            nn.MaxPool2d((2, 2), stride=2),
+            nn.ReLU(),
+            nn.ConstantPad2d(2, 1),
+            nn.Conv2d(2, 4, kernel_size=(5, 5)),
+            nn.MaxPool2d((2, 2), stride=2),
+            nn.ReLU(),
             nn.Flatten(0, -1),
-            nn.Linear(32, 4, bias=False)
+            nn.Linear(256, 64),
+            nn.Sigmoid(),
+            nn.Linear(64, 4)
         ).to(device) for i in range(NUM_MODELS_PER_PROCESS)]
         for j in range(NUM_PROCESSES)
     ]
