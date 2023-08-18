@@ -43,11 +43,11 @@ if __name__ == '__main__':
             nn.ConstantPad2d(2, 1),
             nn.Conv2d(2, 4, kernel_size=(5, 5)),
             nn.MaxPool2d((2, 2), stride=2),
-            nn.ReLU(),
             nn.Flatten(0, -1),
             nn.Linear(256, 64),
             nn.Sigmoid(),
             nn.Linear(64, 4)
+            # can ommit ReLU() (and technically Sigmoid()) as model is done once values showing positive or negative confidence can be obtained
         ).to(device) for i in range(NUM_MODELS_PER_PROCESS)]
         for j in range(NUM_PROCESSES)
     ]

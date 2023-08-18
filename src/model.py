@@ -9,6 +9,7 @@ class NNModel:
     index = -1
     g = -1
     model = -1
+    y = -1
 
     def __init__(self, device, seed, index, model):
         self.device = device
@@ -23,21 +24,20 @@ class NNModel:
 
     def train(self):
         for j in range(FPS * TRAIN_TIME):
-            screen = self.g.get_screen()
-            self.g.Update(self.test(screen))
+            self.g.Update(self.test(self.g.get_screen()))
 
             if self.index == TEST_MODEL:
                 begin_drawing()
-                self.g.Draw()
+                self.g.Draw(self.y)
                 end_drawing()
 
         return self.g.score
         
     def test(self, x):
         keys = [0 for i in range(4)]
-        y = self.model(x)
+        self.y = self.model(x)
 
         for i in range(4):
-            if float(y[i]) > 0: keys[i] = 1
+            if float(self.y[i]) > 0: keys[i] = 1
 
         return keys

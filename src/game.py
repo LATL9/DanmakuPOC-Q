@@ -73,7 +73,10 @@ class Game:
     def End(self): return self.score
     
     def Update(self, keys):
-        if TEST_MODEL != -1: self.collides = []
+        keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)]
+        if TEST_MODEL != -1:
+            self.keys = keys
+            self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
 
@@ -136,13 +139,12 @@ class Game:
                 self.frame_count = 0
                 self.bullets.append(self.new_bullet(BULLET_HONE))
 
-    def Draw(self):
+    def Draw(self, _y):
         clear_background(BLACK)
+        
         self.player.Draw()
         for i in range(len(self.bullets)): self.bullets[i].Draw()
         for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
-        draw_text(str(self.score), 8, 32, 32, WHITE)
-        if self.invincible_count != -1: draw_text(str(self.invincible_count), 8, 64, 32, DARKGRAY)
 
         # minimap
         s = self.get_screen()
@@ -151,6 +153,30 @@ class Game:
         for y in range(32):
             for x in range(32):
                 if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
+
+        draw_text(str(self.score), 8, 32, 32, WHITE)
+        if self.invincible_count != -1: draw_text(str(self.invincible_count), 8, 64, 32, DARKGRAY)
+
+        k = {
+            0: "U",
+            1: "D",
+            2: "L",
+            3: "R",
+        }
+        for i in k:
+            if self.keys[i] == 1:
+                col_text = Color( 0, 255, 0, 192 )
+                col_rect = Color( 0, 255, 0, 192 )
+                draw_rectangle(24 + i * 32, 684 - round(float(_y[i]) * 96), 24, round(float(_y[i]) * 96), col_rect)
+            else:
+                col_text = Color( 255, 255, 255, 192 )
+                if float(_y[i]) > 0:
+                    col_rect = Color( 255, 255, 255, 192 )
+                    draw_rectangle(24 + i * 32, 684 - round(float(_y[i]) * 96), 24, round(float(_y[i]) * 96), col_rect)
+                else:
+                    col_rect = Color( 255, 0, 0, 192 )
+                    draw_rectangle(24 + i * 32, 684, 24, round(float(_y[i]) * -96), col_rect)
+            draw_text(k[i], 24 + i * 32, 668, 32, col_text)
 
     def new_bullet(self, b):
         if b == BULLET_RANDOM:
