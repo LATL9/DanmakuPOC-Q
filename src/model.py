@@ -23,9 +23,8 @@ class NNModel:
             set_target_fps(FPS)
 
     def train(self):
-        screen = self.g.get_screen()
-
         for j in range(FPS * TRAIN_TIME):
+            screen = self.g.get_screen()
             self.g.Update(self.test(screen))
 
             if self.index == TEST_MODEL:

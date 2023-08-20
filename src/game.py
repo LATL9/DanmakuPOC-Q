@@ -73,7 +73,6 @@ class Game:
     def End(self): return self.score
     
     def Update(self, keys):
-        keys = [is_key_down(KEY_UP), is_key_down(KEY_DOWN), is_key_down(KEY_LEFT), is_key_down(KEY_RIGHT)]
         if TEST_MODEL != -1:
             self.keys = keys
             self.collides = []
@@ -158,7 +157,7 @@ class Game:
                 for x in range(l_2.shape[2]):
                     c = round((max(min(float(l_2[i, y, x]), 1), -1) + 1) * 127.5)
                     col = Color( c, c, c, 192 )
-                    draw_rectangle(256 + x * 8, i * 128 + y * 8, 8, 8, col)
+                    draw_rectangle(256 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
 
         draw_text(str(self.score), 8, 32, 32, WHITE)
         if self.invincible_count != -1: draw_text(str(self.invincible_count), 8, 64, 32, DARKGRAY)
@@ -248,10 +247,11 @@ class Game:
     def get_screen(self):
         # creates 2D tensor (32x32) indicating location of bullets
         # first dimension indicates bullets (0 = no bullet, 1 = bullet)
-        # second dimension indicates bounds (0 = out of bounds, 1 = in bounds)
+        # second dimension indicates free space (opposite of first dimension)
         # a third of the dimensions of the screen around the player is used (therefore two thirds of the screen is used)
         # centre (top-left corner of (16, 16)) is player
-        s = torch.zeros(1, 32, 32).to(self.device)
+        s = torch.zeros(2, 32, 32).to(self.device)
+        s[1] = torch.ones(32, 32).to(self.device)
         p_x = self.player.pos.x + self.player.pos.width / 2
         p_y = self.player.pos.y + self.player.pos.height / 2
         
@@ -265,22 +265,31 @@ class Game:
                 x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
                 y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
                 s[0][y][x] = 1
+                s[1][y][x] = 0
 
         # barrier (previous for loop for bullets only draws one pixel, while barrier uses many pixels)
         # -1 is used in if as barrier is drawn to the side of l_x, r_x, l_y, and r_y, not at that location
         if BULLET_SIZE - 1 - p_x >= WIDTH / -3 and BULLET_SIZE - 1 - p_x < WIDTH / 3:
             l_x = math.floor((((BULLET_SIZE - p_x) / (WIDTH / 3)) + 1) * 16)
             for x in range(l_x):
-                for y in range(32): s[0][y][x] = 1
+                for y in range(32):
+                    s[0][y][x] = 1
+                    s[1][y][x] = 0
         if WIDTH - 1 - p_x >= WIDTH / -3 and WIDTH - 1 - p_x < WIDTH / 3:
             r_x = math.floor((((WIDTH - BULLET_SIZE - p_x) / (WIDTH / 3)) + 1) * 16)
             for x in range(r_x, 32):
-                for y in range(32): s[0][y][x] = 1
+                for y in range(32):
+                    s[0][y][x] = 1
+                    s[1][y][x] = 0
         if BULLET_SIZE - 1 - p_y >= HEIGHT / -3 and BULLET_SIZE - 1 - p_y < HEIGHT / 3:
             l_y = math.floor((((BULLET_SIZE - p_y) / (HEIGHT / 3)) + 1) * 16)
-            for y in range(l_y): s[0][y] = torch.ones(1, 32)
+            for y in range(l_y):
+                s[0][y] = torch.ones(1, 32)
+                s[1][y] = torch.zeros(1, 32)
         if HEIGHT - 1 - p_y >= HEIGHT / -3 and HEIGHT - 1 - p_y < HEIGHT / 3:
             r_y = math.floor((((HEIGHT - BULLET_SIZE - p_y) / (HEIGHT / 3)) + 1) * 16)
-            for y in range(r_y, 32): s[0][y] = torch.ones(1, 32)
+            for y in range(r_y, 32):
+                s[0][y] = torch.ones(1, 32)
+                s[1][y] = torch.zeros(1, 32)
 
         return s

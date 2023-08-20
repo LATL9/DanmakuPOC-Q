@@ -37,15 +37,17 @@ if __name__ == '__main__':
     models = [
         [nn.Sequential(
             nn.ConstantPad2d(4, 1),
-            nn.Conv2d(1, 2, kernel_size=(9, 9)),
+            nn.Conv2d(2, 4, kernel_size=(9, 9)),
             nn.MaxPool2d((2, 2), stride=2),
             nn.ConstantPad2d(2, 1),
-            nn.Conv2d(2, 4, kernel_size=(5, 5)),
+            nn.Conv2d(4, 8, kernel_size=(5, 5)),
             nn.MaxPool2d((2, 2), stride=2),
             nn.Flatten(0, -1),
-            nn.Linear(256, 64),
+            nn.Linear(512, 128),
             nn.Sigmoid(),
-            nn.Linear(64, 4)
+            nn.Linear(128, 32),
+            nn.Sigmoid(),
+            nn.Linear(32, 4)
             # can ommit ReLU() and Sigmoid() as model is done once values showing positive or negative confidence can be obtained
         ).to(device) for i in range(NUM_MODELS_PER_PROCESS)]
         for j in range(NUM_PROCESSES)
