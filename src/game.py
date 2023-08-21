@@ -138,7 +138,7 @@ class Game:
                 self.frame_count = 0
                 self.bullets.append(self.new_bullet(BULLET_HONE))
 
-    def Draw(self, l_2, pred):
+    def Draw(self, l_2, l_3, l_4, l_5, pred):
         clear_background(BLACK)
         
         self.player.Draw()
@@ -152,12 +152,28 @@ class Game:
         for y in range(32):
             for x in range(32):
                 if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
+
+        # layers
         for i in range(l_2.shape[0]):
             for y in range(l_2.shape[1]):
                 for x in range(l_2.shape[2]):
-                    c = round((max(min(float(l_2[i, y, x]), 1), -1) + 1) * 127.5)
-                    col = Color( c, c, c, 192 )
-                    draw_rectangle(256 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
+                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
+                    col = Color( c, c, c, 255 )
+                    draw_rectangle(264 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
+        for i in range(l_3.shape[0]):
+            for y in range(l_3.shape[1]):
+                for x in range(l_3.shape[2]):
+                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
+                    col = Color( c, c, c, 255 )
+                    draw_rectangle(528 + x * 4, i * 32 + y * 4, 4, 4, col)
+        for y in range(l_4.shape[0]):
+            col = Color( c, c, c, 255 )
+            c = round(max(min(float(l_4[y]), 1), 0) * 255)
+            draw_rectangle(568 + (y // 32) * 8, (y % 32) * 8, 8, 8, col)
+        for y in range(l_5.shape[0]):
+            col = Color( c, c, c, 255 )
+            c = round(max(min(float(l_5[y]), 1), 0) * 255)
+            draw_rectangle(608, y * 8, 8, 8, col)
 
         draw_text(str(self.score), 8, 32, 32, WHITE)
         if self.invincible_count != -1: draw_text(str(self.invincible_count), 8, 64, 32, DARKGRAY)

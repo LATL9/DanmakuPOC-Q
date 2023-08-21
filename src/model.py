@@ -30,7 +30,10 @@ class NNModel:
             if self.index == TEST_MODEL:
                 begin_drawing()
                 self.g.Draw(
-                    self.model[:3](screen),
+                    self.l_2,
+                    self.l_3,
+                    self.l_4,
+                    self.l_5,
                     self.pred
                 )
                 end_drawing()
@@ -39,7 +42,15 @@ class NNModel:
         
     def test(self, x):
         keys = [0 for i in range(4)]
-        y = self.model(x)
+        if self.index == TEST_MODEL:
+            # l_x = xth layer in model
+            self.l_2 = self.model[:4](x)
+            self.l_3 = self.model[4:8](self.l_2)
+            self.l_4 = self.model[8:11](self.l_3)
+            self.l_5 = self.model[11:13](self.l_4)
+            y = self.model[13:](self.l_5)
+        else:
+            y = self.model(x)
         self.pred = [float(f) for f in y]
 
         for i in range(len(self.pred)):

@@ -8,7 +8,7 @@ FPS = 30
 BULLET_SIZE = 18
 PLAYER_SIZE = 12
 
-NUM_BULLETS = 1
+NUM_BULLETS = 2
 NUM_PROCESSES = 8
 NUM_MODELS = 96 # must be divisible by 4 (to divide into exact quarters)
 NUM_MODELS_PER_PROCESS = round(NUM_MODELS / NUM_PROCESSES)

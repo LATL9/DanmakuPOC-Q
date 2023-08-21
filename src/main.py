@@ -11,23 +11,24 @@ def train():
     jobs = []
     manager = mp.Manager()
     fitnesses = manager.dict()
-   
-    for i in range(NUM_PROCESSES):
-        jobs.append(mp.Process(target=test, args=(fitnesses, device, seed, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)))
+
     if TEST_MODEL == -1:
-        for i in range(len(jobs)): 
-            jobs[i].start()
-        for i in range(len(jobs)):
-            jobs[i].join()
+        for i in range(NUM_PROCESSES):
+            jobs.append(mp.Process(target=test, args=(fitnesses, device, seed, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)))
+            for i in range(len(jobs)):
+                jobs[i].start()
+            for i in range(len(jobs)):
+                jobs[i].join()
     else:
-        # if testing, only test thread containing specified model
-        jobs[TEST_MODEL // NUM_MODELS_PER_PROCESS].start()
-        jobs[TEST_MODEL // NUM_MODELS_PER_PROCESS].join()
+        # if testing, only test specified model
+        jobs.append(mp.Process(target=test, args=(fitnesses, device, seed, [TEST_MODEL], models[TEST_MODEL // NUM_MODELS_PER_PROCESS],)))
+        jobs[0].start()
+        jobs[0].join()
 
     return fitnesses
 
 def test(fitnesses, device, seed, indexes, _models): # _ prevents naming conflict
-    for i in range(NUM_MODELS_PER_PROCESS):
+    for i in range(len(indexes)):
         m = NNModel(device, seed, indexes[i], _models[i])
         fitnesses[indexes[i]] = m.train()
         print("{} / {}".format(len(fitnesses), NUM_MODELS), end='\r')
@@ -37,18 +38,19 @@ if __name__ == '__main__':
     models = [
         [nn.Sequential(
             nn.ConstantPad2d(4, 1),
-            nn.Conv2d(2, 4, kernel_size=(9, 9)),
+            nn.Conv2d(2, 4, kernel_size=(9, 9), bias=False),
+            nn.ReLU(),
             nn.MaxPool2d((2, 2), stride=2),
             nn.ConstantPad2d(2, 1),
-            nn.Conv2d(4, 8, kernel_size=(5, 5)),
+            nn.Conv2d(4, 8, kernel_size=(5, 5), bias=False),
+            nn.ReLU(),
             nn.MaxPool2d((2, 2), stride=2),
             nn.Flatten(0, -1),
             nn.Linear(512, 128),
-            nn.Sigmoid(),
+            nn.ReLU(),
             nn.Linear(128, 32),
-            nn.Sigmoid(),
+            nn.ReLU(),
             nn.Linear(32, 4)
-            # can ommit ReLU() and Sigmoid() as model is done once values showing positive or negative confidence can be obtained
         ).to(device) for i in range(NUM_MODELS_PER_PROCESS)]
         for j in range(NUM_PROCESSES)
     ]
@@ -87,7 +89,7 @@ if __name__ == '__main__':
         # 2nd quartile is mutated
         # 1st quartile stays same
         vals = list(fitnesses.values())
-        
+
         median = vals[((NUM_MODELS * 3 // 4) - 1) // 2]
         quartile_1_avg = sum(vals[:NUM_MODELS // 4]) // (NUM_MODELS // 4)
         quartile_3_avg = sum(vals[NUM_MODELS // 2:NUM_MODELS * 3 // 4]) // (NUM_MODELS // 4)
