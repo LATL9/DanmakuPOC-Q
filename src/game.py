@@ -103,20 +103,20 @@ class Game:
 
         for i in range(len(self.bullets)):
             if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * 4),
-                self.player.pos.y - round(self.player.pos.height * 4),
-                self.player.pos.width * 9,
-                self.player.pos.height * 9),
+                self.player.pos.x - round(self.player.pos.width * 2.5),
+                self.player.pos.y - round(self.player.pos.height * 2.5),
+                self.player.pos.width * 6,
+                self.player.pos.height * 6),
                 self.bullets[i].pos):
                 self.colliding[0] = True
                 if self.invincible_count[0] == -1: self.invincible_count[0] = 0
                 self.untouched_count = 0
                 if TEST_MODEL != -1: self.collides.append(i);
             if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * 2),
-                self.player.pos.y - round(self.player.pos.height * 2),
-                self.player.pos.width * 5,
-                self.player.pos.height * 5),
+                self.player.pos.x - round(self.player.pos.width * 1),
+                self.player.pos.y - round(self.player.pos.height * 1),
+                self.player.pos.width * 3,
+                self.player.pos.height * 3),
                 self.bullets[i].pos):
                 self.colliding[1] = True
                 if self.invincible_count[1] == -1: self.invincible_count[1] = 0
