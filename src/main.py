@@ -21,9 +21,8 @@ def train():
             jobs[i].join()
     else:
         # if testing, only test specified model
-        jobs.append(mp.Process(target=test, args=(fitnesses, device, seed, [TEST_MODEL], models[TEST_MODEL // NUM_MODELS_PER_PROCESS],)))
-        jobs[0].start()
-        jobs[0].join()
+        
+        test(fitnesses, device, seed, [TEST_MODEL], [models[TEST_MODEL // NUM_MODELS_PER_PROCESS][TEST_MODEL % NUM_MODELS_PER_PROCESS]])
 
     return fitnesses
 
