@@ -19,7 +19,7 @@ class Game:
     colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
     still_colliding = [False, False, False]
     invincible_count = [-1, -1, -1] # -1 = not invincible, 0 to (FPS - 1) = invincible frame (FPS is end)
-    untouched_count = -1 # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2 - 1) = not touching, FPS * 2= end and point reward
+    untouched_count = -1 # -1 = touching bullets (any hitbox layer), 0 to (FPS * 1.5 - 1) = not touching, FPS * 1.5 = end and point reward
     if TEST_MODEL != -1: collides = [] # shows collisions (used for demonstration, not in training)
 
     def __init__(self, device, seed):
@@ -87,7 +87,7 @@ class Game:
                 invincible = True
         if invincible: self.untouched_count = 0
         else:
-            if self.untouched_count < FPS * 2 + 1: self.untouched_count += 1
+            if self.untouched_count < FPS * 3 // 2 + 1: self.untouched_count += 1
             
         self.player.Update(keys)
         for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
@@ -130,7 +130,7 @@ class Game:
         
         for i in range(len(self.invincible_count)):
             if self.invincible_count[i] == 0: self.score -= (i + 1) * FPS
-        if self.untouched_count == FPS * 2 + 1: self.score += 1
+        if self.untouched_count == FPS * 3 // 2 + 1: self.score += 1
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
