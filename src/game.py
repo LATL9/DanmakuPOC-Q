@@ -185,18 +185,19 @@ class Game:
             3: "R",
         }
         for i in k:
+            p = round(max(min(pred[i], 1), -1) * 96)
             if self.keys[i] == 1:
                 col_text = Color( 0, 255, 0, 192 )
                 col_rect = Color( 0, 255, 0, 192 )
-                draw_rectangle(24 + i * 32, 684 - round(pred[i] * 96), 24, round(pred[i] * 96), col_rect)
+                draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
             else:
                 col_text = Color( 255, 255, 255, 192 )
-                if pred[i] > 0:
+                if p > 0:
                     col_rect = Color( 255, 255, 255, 192 )
-                    draw_rectangle(24 + i * 32, 684 - round(pred[i] * 96), 24, round(pred[i] * 96), col_rect)
+                    draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
                 else:
                     col_rect = Color( 255, 0, 0, 192 )
-                    draw_rectangle(24 + i * 32, 684, 24, round(pred[i] * -96), col_rect)
+                    draw_rectangle(24 + i * 32, 684, 24, p * -1, col_rect)
             draw_text(k[i], 24 + i * 32, 668, 32, col_text)
 
     def new_bullet(self, b):
