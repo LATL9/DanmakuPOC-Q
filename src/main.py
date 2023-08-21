@@ -15,10 +15,10 @@ def train():
     if TEST_MODEL == -1:
         for i in range(NUM_PROCESSES):
             jobs.append(mp.Process(target=test, args=(fitnesses, device, seed, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)))
-            for i in range(len(jobs)):
-                jobs[i].start()
-            for i in range(len(jobs)):
-                jobs[i].join()
+        for i in range(len(jobs)):
+            jobs[i].start()
+        for i in range(len(jobs)):
+            jobs[i].join()
     else:
         # if testing, only test specified model
         jobs.append(mp.Process(target=test, args=(fitnesses, device, seed, [TEST_MODEL], models[TEST_MODEL // NUM_MODELS_PER_PROCESS],)))
