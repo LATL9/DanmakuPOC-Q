@@ -1,8 +1,7 @@
 from common import *
 
 from game import *
-
-import queue
+import os
 
 class NNModel:
     device = -1
@@ -25,6 +24,7 @@ class NNModel:
     def train(self):
         for j in range(FPS * TRAIN_TIME):
             screen = self.g.get_screen()
+            self.test(screen)
             self.g.Update(self.test(screen))
 
             if self.index == TEST_MODEL:
@@ -36,6 +36,7 @@ class NNModel:
                     self.l_5,
                     self.pred
                 )
+                draw_text(str(j), 8, 64, 32, WHITE)
                 end_drawing()
 
         return self.g.score

@@ -69,7 +69,7 @@ class Game:
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
 
     def End(self): return self.score
-    
+
     def Update(self, keys):
         if TEST_MODEL != -1:
             self.keys = keys

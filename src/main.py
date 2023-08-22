@@ -13,27 +13,24 @@ def train():
     fitnesses = manager.dict()
 
     if TEST_MODEL == -1:
-        for i in range(NUM_PROCESSES):
-            jobs.append(mp.Process(target=test, args=(fitnesses, device, seed, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)))
-        for i in range(len(jobs)):
-            jobs[i].start()
-        for i in range(len(jobs)):
-            jobs[i].join()
+        jobs = [mp.Process(target=test, args=(fitnesses, device, seed, list(range(i * NUM_MODELS_PER_PROCESS, (i + 1) * NUM_MODELS_PER_PROCESS)), models[i],)) for i in range(NUM_PROCESSES)]
+        for i in range(len(jobs)): jobs[i].start()
+        for i in range(len(jobs)): jobs[i].join()
     else:
         # if testing, only test specified model
-        
         test(fitnesses, device, seed, [TEST_MODEL], [models[TEST_MODEL // NUM_MODELS_PER_PROCESS][TEST_MODEL % NUM_MODELS_PER_PROCESS]])
 
     return fitnesses
 
 def test(fitnesses, device, seed, indexes, _models): # _ prevents naming conflict
-    for i in range(len(indexes)):
-        m = NNModel(device, seed, indexes[i], _models[i])
-        fitnesses[indexes[i]] = m.train()
+    for j in range(len(indexes)):
+        m = NNModel(device, seed, indexes[j], _models[j])
+        fitnesses[indexes[j]] = m.train()
         print("{} / {}".format(len(fitnesses), NUM_MODELS), end='\r')
 
 if __name__ == '__main__':
     device = torch.device("cpu")
+    torch.set_num_threads(1)
     models = [
         [nn.Sequential(
             nn.ConstantPad2d(4, 1),
@@ -61,6 +58,9 @@ if __name__ == '__main__':
             models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].load_state_dict(checkpoint['model{}_state_dict'.format(i)])
             models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].to(device)
 
+        if TEST_MODEL != -1:
+            rankings_r = open("rankings.csv", 'r').readlines()
+            seed = float(rankings_r[len(rankings_r) - 1].split(', ')[1])
         print("Restarting from checkpoint at epoch {}.".format(epoch))
         log = open("log.csv", 'a')
         rankings = open("rankings.csv", 'a')
@@ -68,15 +68,15 @@ if __name__ == '__main__':
     except FileNotFoundError:
         epoch = 0
         log = open("log.csv", 'w')
-        log.write("Time, Epoch, Median, 1st Quartile Avg, 3rd Quartile Avg\n") # header
+        log.write("Time, Epoch, Best, Median, 1st Quartile Avg, 3rd Quartile Avg\n") # header
         rankings = open("rankings.csv", 'w')
-        rankings.write("Epoch, Models\n") # header
+        rankings.write("Epoch, Seed, Models\n") # header
 
     stats = ""
     while True:
         epoch += 1
 
-        seed = time.time()
+        if TEST_MODEL == -1: seed = int(time.time())
         fitnesses = train()
         fitnesses = {k: v for k, v in sorted(fitnesses.items(), key=lambda item: item[1], reverse=True)}
 
@@ -93,34 +93,21 @@ if __name__ == '__main__':
         quartile_1_avg = sum(vals[:NUM_MODELS // 4]) // (NUM_MODELS // 4)
         quartile_3_avg = sum(vals[NUM_MODELS // 2:NUM_MODELS * 3 // 4]) // (NUM_MODELS // 4)
 
-        # 2nd quartile
-        for i in range(NUM_MODELS // 4, NUM_MODELS // 2):
-            # mutation
-            for param in models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].parameters():
-                param.data += MUTATION_POWER / 4 * torch.randn_like(param).to(device)
-
-        # 3rd quartile
-        for i in range(NUM_MODELS // 4):
-            models[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS] = models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS]
-
-            for param in models[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS].parameters():
-                param.data += MUTATION_POWER * torch.randn_like(param).to(device)
-
-        # 4th quartile
-        for i in range(NUM_MODELS * 3 // 4, NUM_MODELS):
-            for param in models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].parameters():
-                param.data = torch.randn_like(param).to(device)
-
-        log.write("{}, {}, {}, {}, {}\n".format(
+        log.write("{}, {}, {}, {}, {}, {}\n".format(
             time.asctime(),
             epoch,
+            vals[0],
             median,
             quartile_1_avg,
             quartile_3_avg
         ))
         log.flush()
-        # 1st column is epoch, subsequent even columns = model index and odd columns = model fitness ordered in descending order of fitness
-        rankings.write("{}, {}\n".format(epoch, ", ".join(["{}, {}".format(x, fitnesses[x]) for x in fitnesses])))
+        # 1st column is epoch, 2nd column is seed (for replays), subsequent odd columns = model index and even columns = model fitness ordered in descending order of fitness
+        rankings.write("{}, {}, {}\n".format(
+            epoch,
+            seed,
+            ", ".join(["{}, {}".format(x, fitnesses[x]) for x in fitnesses])
+        ))
         rankings.flush()
 
         #if epoch % 5 == 0:
@@ -131,6 +118,24 @@ if __name__ == '__main__':
                 checkpoint['model{}_state_dict'.format(i)] = models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].state_dict()
             torch.save(checkpoint, "models/models-{}.pt".format(epoch))
             os.system("cp models/models-{}.pt models/models.pt".format(epoch)) # models.pt = most recent
+
+        # 2nd quartile
+        for i in range(NUM_MODELS // 4, NUM_MODELS // 2):
+           # mutation
+           for param in models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].parameters():
+               param.data += MUTATION_POWER / 4 * torch.randn_like(param).to(device)
+
+        # 3rd quartile
+        for i in range(NUM_MODELS // 4):
+           models[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS] = models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS]
+
+           for param in models[(i + NUM_MODELS // 2) // NUM_MODELS_PER_PROCESS][(i + NUM_MODELS // 2) % NUM_MODELS_PER_PROCESS].parameters():
+               param.data += MUTATION_POWER * torch.randn_like(param).to(device)
+
+        # 4th quartile
+        for i in range(NUM_MODELS * 3 // 4, NUM_MODELS):
+           for param in models[i // NUM_MODELS_PER_PROCESS][i % NUM_MODELS_PER_PROCESS].parameters():
+               param.data = torch.randn_like(param).to(device)
 
         print("Epoch {}: Median = {}, Best = {}, 1st Quartile Avg = {}, 3rd Quartile Avg = {}\n".format(
             epoch,
