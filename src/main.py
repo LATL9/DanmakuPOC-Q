@@ -132,9 +132,10 @@ if __name__ == '__main__':
             torch.save(checkpoint, "models/models-{}.pt".format(epoch))
             os.system("cp models/models-{}.pt models/models.pt".format(epoch)) # models.pt = most recent
 
-        print("Epoch {}: Median = {}, 1st Quartile Avg = {}, 3rd Quartile Avg = {}\n".format(
+        print("Epoch {}: Median = {}, Best = {}, 1st Quartile Avg = {}, 3rd Quartile Avg = {}\n".format(
             epoch,
             median,
+            vals[0],
             quartile_1_avg,
             quartile_3_avg
         ), end='')
