@@ -72,7 +72,6 @@ if __name__ == '__main__':
         rankings = open("rankings.csv", 'w')
         rankings.write("Epoch, Seed, Models\n") # header
 
-    stats = ""
     while True:
         epoch += 1
 
