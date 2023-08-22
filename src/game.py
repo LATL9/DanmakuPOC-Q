@@ -96,9 +96,9 @@ class Game:
                 self.player.pos.width * 6,
                 self.player.pos.height * 6),
                 self.bullets[i].pos):
-                if self.colliding[0] == False: self.score -= 1
-                self.colliding[0] = True
-                self.untouched_count = 0
+                if self.colliding[0] == False:
+                    self.colliding[0] = True
+                    self.score -= 1
                 if TEST_MODEL != -1: self.collides.append(i);
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width * 1),
@@ -106,15 +106,15 @@ class Game:
                 self.player.pos.width * 3,
                 self.player.pos.height * 3),
                 self.bullets[i].pos):
-                if self.colliding[1] == False: self.score -= 2
-                self.colliding[1] = True
-                self.untouched_count = 0
+                if self.colliding[1] == False:
+                    self.colliding[1] = True
+                    self.score -= 2
                 if TEST_MODEL != -1: self.collides.append(i);
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
-                if self.colliding[2] == False: self.score -= 3
-                self.colliding[2] = True
-                self.score -= 3
-                self.untouched_count = 0
+                if self.colliding[2] == False:
+                    self.colliding[2] = True
+                    self.score -= 3
+                self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                 if TEST_MODEL != -1: self.collides.append(i);
         
         if self.untouched_count == FPS * 3 // 2 + 1: self.score += 1
