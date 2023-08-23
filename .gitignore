@@ -1,4 +1,5 @@
 .etc/
+.vscode/
 models/models*
 src/__pycache__/*
 build.sh
