@@ -75,7 +75,7 @@ class Game:
 
         self.colliding = [False for i in range(len(self.colliding))]
 
-        if self.untouched_count < FPS * 5 // 2 + 1: self.untouched_count += 1
+        if self.untouched_count < FPS * 2 + 1: self.untouched_count += 1
             
         self.player.Update(keys)
         for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
@@ -91,20 +91,20 @@ class Game:
 
         for i in range(len(self.bullets)):
             if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * 2.5),
-                self.player.pos.y - round(self.player.pos.height * 2.5),
-                self.player.pos.width * 6,
-                self.player.pos.height * 6),
+                self.player.pos.x - round(self.player.pos.width * 4),
+                self.player.pos.y - round(self.player.pos.height * 4),
+                self.player.pos.width * 9,
+                self.player.pos.height * 9),
                 self.bullets[i].pos):
                 if self.colliding[0] == False:
                     self.colliding[0] = True
                     self.score -= 1
                 if TEST_MODEL != -1: self.collides.append(i);
             if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * 1),
-                self.player.pos.y - round(self.player.pos.height * 1),
-                self.player.pos.width * 3,
-                self.player.pos.height * 3),
+                self.player.pos.x - round(self.player.pos.width * 1.5),
+                self.player.pos.y - round(self.player.pos.height * 1.5),
+                self.player.pos.width * 4,
+                self.player.pos.height * 4),
                 self.bullets[i].pos):
                 if self.colliding[1] == False:
                     self.colliding[1] = True
@@ -117,7 +117,7 @@ class Game:
                 self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                 if TEST_MODEL != -1: self.collides.append(i);
         
-        if self.untouched_count == FPS * 3 // 2 + 1: self.score += 1
+        if self.untouched_count == FPS * 2 + 1: self.score += 1
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
@@ -140,7 +140,7 @@ class Game:
             for x in range(32):
                 if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
 
-        # layers
+            # layers
         for i in range(l_2.shape[0]):
             for y in range(l_2.shape[1]):
                 for x in range(l_2.shape[2]):
@@ -236,7 +236,7 @@ class Game:
                     v_x = (p_x - WIDTH) * BULLET_HONE_SPEED / hyp
                 v_y = adj * BULLET_HONE_SPEED / hyp
 
-            return Bullet(b_x, b_y, BULLET_SIZE, v_x, v_y)
+            return Bullet(b_x - BULLET_SIZE // 2, b_y - BULLET_SIZE // 2, BULLET_SIZE, v_x, v_y)
 
     def is_colliding(self, r1, r2):
         if (r1.x == r2.x or \

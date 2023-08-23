@@ -1,12 +1,12 @@
 import torch.multiprocessing as mp
 
-TEST_MODEL = 23 # -1 = train models, dont test; 0- = test xth model by index
+TEST_MODEL = -1 # -1 = train models, dont test; 0- = test xth model by index
 WIDTH = 800
 HEIGHT = 800
 FPS = 30
 
-BULLET_SIZE = 18
-PLAYER_SIZE = 12
+BULLET_SIZE = 12
+PLAYER_SIZE = 8
 
 NUM_BULLETS = 2
 NUM_PROCESSES = 12
