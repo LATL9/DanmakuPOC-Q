@@ -19,7 +19,7 @@ class NNModel:
 
         if self.index == TEST_MODEL: # test model to show to user
             init_window(WIDTH, HEIGHT, "DanmakuPRC")
-            set_target_fps(FPS)
+            set_target_fps(10)
 
     def train(self):
         for j in range(FPS * TRAIN_TIME):
