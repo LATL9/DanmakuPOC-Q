@@ -140,7 +140,7 @@ class Game:
             for x in range(32):
                 if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
 
-            # layers
+        # layers
         for i in range(l_2.shape[0]):
             for y in range(l_2.shape[1]):
                 for x in range(l_2.shape[2]):
