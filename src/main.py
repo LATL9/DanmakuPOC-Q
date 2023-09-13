@@ -25,6 +25,10 @@ def train():
 def test(fitnesses, device, seed, indexes, _models): # _ prevents naming conflict
     for j in range(len(indexes)):
         m = NNModel(device, seed, indexes[j], _models[j])
+        # for each trial, the seed is offset by 1 (nth trial = seed + n - 1)
+        for k in range(NUM_TRIALS):
+            m.train()
+            m.reset(seed + k)
         fitnesses[indexes[j]] = m.train()
         print("{} / {}".format(len(fitnesses), NUM_MODELS), end='\r')
 

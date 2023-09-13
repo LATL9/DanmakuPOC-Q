@@ -68,6 +68,22 @@ class Game:
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
 
+    def Reset(self, seed):
+        self.rng = random.Random(seed)
+        if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
+        else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
+
+        # remove all but edge barrier
+        for i in range(4, len(self.bullets)):
+            del self.bullets[4]
+
+        if BULLET_TYPE == BULLET_HONE:
+            self.frame_count = FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
+        else:
+            for i in range(NUM_BULLETS):
+                self.bullets.append(self.new_bullet(BULLET_TYPE))
+
+
     def Update(self, keys):
         if TEST_MODEL != -1:
             self.keys = keys

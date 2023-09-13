@@ -21,6 +21,9 @@ class NNModel:
             init_window(WIDTH, HEIGHT, "DanmakuPRC")
             set_target_fps(10)
 
+    def reset(self, seed):
+        self.g.Reset(seed)
+
     def train(self):
         for j in range(FPS * TRAIN_TIME):
             screen = self.g.get_screen()
