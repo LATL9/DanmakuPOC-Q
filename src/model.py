@@ -18,7 +18,7 @@ class NNModel:
         self.g = Game(self.device, self.seed)
 
         if self.index == TEST_MODEL: # test model to show to user
-            init_window(WIDTH, HEIGHT, "DanmakuPRC")
+            init_window(WIDTH, HEIGHT, "DanmakuPOC")
             set_target_fps(FPS)
 
     def reset(self, seed):
