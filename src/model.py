@@ -5,19 +5,17 @@ import os
 
 class NNModel:
     device = -1
-    index = -1
     g = -1
     model = -1
     pred = -1
 
-    def __init__(self, device, seed, index, model):
+    def __init__(self, device, seed, model):
         self.device = device
-        self.index = index
         self.model = model
         self.seed = seed
         self.g = Game(self.device, self.seed)
 
-        if self.index == TEST_MODEL: # test model to show to user
+        if TEST_MODEL != -1: # test model to show to user
             init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
             set_target_fps(FPS)
 
@@ -27,10 +25,9 @@ class NNModel:
     def train(self):
         for j in range(FPS * TRAIN_TIME):
             screen = self.g.get_screen()
-            self.test(screen)
             self.g.Update(self.test(screen))
 
-            if self.index == TEST_MODEL:
+            if TEST_MODEL != -1:
                 begin_drawing()
                 self.g.Draw(
                     self.l_2,
@@ -47,7 +44,7 @@ class NNModel:
         
     def test(self, x):
         keys = [0 for i in range(4)]
-        if self.index == TEST_MODEL:
+        if TEST_MODEL != -1:
             # l_x = xth layer in model
             self.l_2 = self.model[:4](x)
             self.l_3 = self.model[4:8](self.l_2)

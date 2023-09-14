@@ -160,35 +160,35 @@ class Game:
         for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
 
         # minimap
-#        s = self.get_screen()
-#        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 192 ))
-#        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 192 ))
-#        for y in range(32):
-#            for x in range(32):
-#                if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
-#
-#        # layers
-#        for i in range(l_2.shape[0]):
-#            for y in range(l_2.shape[1]):
-#                for x in range(l_2.shape[2]):
-#                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
-#                    col = Color( c, c, c, 255 )
-#                    draw_rectangle(264 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
-#        for i in range(l_3.shape[0]):
-#            for y in range(l_3.shape[1]):
-#                for x in range(l_3.shape[2]):
-#                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
-#                    col = Color( c, c, c, 255 )
-#                    draw_rectangle(528 + x * 4, i * 32 + y * 4, 4, 4, col)
-#        for y in range(l_4.shape[0]):
-#            col = Color( c, c, c, 255 )
-#            c = round(max(min(float(l_4[y]), 1), 0) * 255)
-#            draw_rectangle(568 + (y // 32) * 8, (y % 32) * 8, 8, 8, col)
-#        for y in range(l_5.shape[0]):
-#            col = Color( c, c, c, 255 )
-#            c = round(max(min(float(l_5[y]), 1), 0) * 255)
-#            draw_rectangle(608, y * 8, 8, 8, col)
-#
+        s = self.get_screen()
+        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 192 ))
+        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 192 ))
+        for y in range(32):
+            for x in range(32):
+                if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
+
+        # layers
+        for i in range(l_2.shape[0]):
+            for y in range(l_2.shape[1]):
+                for x in range(l_2.shape[2]):
+                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
+                    col = Color( c, c, c, 255 )
+                    draw_rectangle(264 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
+        for i in range(l_3.shape[0]):
+            for y in range(l_3.shape[1]):
+                for x in range(l_3.shape[2]):
+                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
+                    col = Color( c, c, c, 255 )
+                    draw_rectangle(528 + x * 4, i * 32 + y * 4, 4, 4, col)
+        for y in range(l_4.shape[0]):
+            col = Color( c, c, c, 255 )
+            c = round(max(min(float(l_4[y]), 1), 0) * 255)
+            draw_rectangle(568 + (y // 32) * 8, (y % 32) * 8, 8, 8, col)
+        for y in range(l_5.shape[0]):
+            col = Color( c, c, c, 255 )
+            c = round(max(min(float(l_5[y]), 1), 0) * 255)
+            draw_rectangle(608, y * 8, 8, 8, col)
+
         draw_text(str(self.score), 8, 32, 32, WHITE)
 
         for i in range(len(self.collide_count)):
