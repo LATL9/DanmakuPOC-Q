@@ -19,7 +19,7 @@ class NNModel:
 
         if self.index == TEST_MODEL: # test model to show to user
             init_window(WIDTH, HEIGHT, "DanmakuPRC")
-            set_target_fps(10)
+            set_target_fps(FPS)
 
     def reset(self, seed):
         self.g.Reset(seed)
@@ -40,6 +40,7 @@ class NNModel:
                     self.pred
                 )
                 draw_text(str(j), 8, 64, 32, WHITE)
+                draw_fps(8, 8)
                 end_drawing()
 
         return self.g.score

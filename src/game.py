@@ -18,7 +18,9 @@ class Game:
     score = 0
     colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
     untouched_count = -1 # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
-    if TEST_MODEL != -1: collides = [] # shows collisions (used for demonstration, not in training)
+    if TEST_MODEL != -1:
+        collides = [] # shows collisions (used for demonstration, not in training)
+        collide_count = [] # no of frames each hitbox is touched
 
     def __init__(self, device, seed):
         self.device = device
@@ -68,6 +70,9 @@ class Game:
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
 
+        if TEST_MODEL != -1:
+            self.collide_count = [0 for i in range(3)]
+
     def Reset(self, seed):
         self.rng = random.Random(seed)
         if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
@@ -115,7 +120,9 @@ class Game:
                 if self.colliding[0] == False:
                     self.colliding[0] = True
                     self.score -= 1
-                if TEST_MODEL != -1: self.collides.append(i);
+                if TEST_MODEL != -1:
+                    self.collides.append(i);
+                    self.collide_count[0] += 1
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width * 1.5),
                 self.player.pos.y - round(self.player.pos.height * 1.5),
@@ -125,13 +132,17 @@ class Game:
                 if self.colliding[1] == False:
                     self.colliding[1] = True
                     self.score -= 2
-                if TEST_MODEL != -1: self.collides.append(i);
+                if TEST_MODEL != -1:
+                    self.collides.append(i);
+                    self.collide_count[1] += 1
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 if self.colliding[2] == False:
                     self.colliding[2] = True
                     self.score -= 3
                 self.untouched_count = 0 # reset "untouched" count (bullet hits player)
-                if TEST_MODEL != -1: self.collides.append(i);
+                if TEST_MODEL != -1:
+                    self.collides.append(i);
+                    self.collide_count[2] += 1
         
         if self.untouched_count == FPS * 2 + 1: self.score += 1
 
@@ -149,36 +160,39 @@ class Game:
         for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
 
         # minimap
-        s = self.get_screen()
-        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 192 ))
-        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 192 ))
-        for y in range(32):
-            for x in range(32):
-                if s[0, y, x] == 1:  draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
-
-        # layers
-        for i in range(l_2.shape[0]):
-            for y in range(l_2.shape[1]):
-                for x in range(l_2.shape[2]):
-                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
-                    col = Color( c, c, c, 255 )
-                    draw_rectangle(264 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
-        for i in range(l_3.shape[0]):
-            for y in range(l_3.shape[1]):
-                for x in range(l_3.shape[2]):
-                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
-                    col = Color( c, c, c, 255 )
-                    draw_rectangle(528 + x * 4, i * 32 + y * 4, 4, 4, col)
-        for y in range(l_4.shape[0]):
-            col = Color( c, c, c, 255 )
-            c = round(max(min(float(l_4[y]), 1), 0) * 255)
-            draw_rectangle(568 + (y // 32) * 8, (y % 32) * 8, 8, 8, col)
-        for y in range(l_5.shape[0]):
-            col = Color( c, c, c, 255 )
-            c = round(max(min(float(l_5[y]), 1), 0) * 255)
-            draw_rectangle(608, y * 8, 8, 8, col)
-
+#        s = self.get_screen()
+#        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 192 ))
+#        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 192 ))
+#        for y in range(32):
+#            for x in range(32):
+#                if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
+#
+#        # layers
+#        for i in range(l_2.shape[0]):
+#            for y in range(l_2.shape[1]):
+#                for x in range(l_2.shape[2]):
+#                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
+#                    col = Color( c, c, c, 255 )
+#                    draw_rectangle(264 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
+#        for i in range(l_3.shape[0]):
+#            for y in range(l_3.shape[1]):
+#                for x in range(l_3.shape[2]):
+#                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
+#                    col = Color( c, c, c, 255 )
+#                    draw_rectangle(528 + x * 4, i * 32 + y * 4, 4, 4, col)
+#        for y in range(l_4.shape[0]):
+#            col = Color( c, c, c, 255 )
+#            c = round(max(min(float(l_4[y]), 1), 0) * 255)
+#            draw_rectangle(568 + (y // 32) * 8, (y % 32) * 8, 8, 8, col)
+#        for y in range(l_5.shape[0]):
+#            col = Color( c, c, c, 255 )
+#            c = round(max(min(float(l_5[y]), 1), 0) * 255)
+#            draw_rectangle(608, y * 8, 8, 8, col)
+#
         draw_text(str(self.score), 8, 32, 32, WHITE)
+
+        for i in range(len(self.collide_count)):
+            draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
 
         k = {
             0: "U",
