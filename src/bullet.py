@@ -8,10 +8,13 @@ class Bullet:
     v_x = -1
     v_y = -1
 
-    def __init__(self, x, y, size, v_x, v_y):
-        self.pos = Rectangle(x, y, size, size)
+    def __init__(self, x, y, w, h, v_x, v_y):
+        self.pos = Rectangle(x, y, w, h)
         self.v_x = v_x
         self.v_y = v_y
+
+    def copy(self):
+        return Bullet(self.pos.x, self.pos.y, self.pos.width, self.pos.height, self.v_x, self.v_y)
 
     def Update(self):
         self.pos.x += self.v_x

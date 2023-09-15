@@ -15,14 +15,41 @@ class NNModel:
         self.seed = seed
         self.g = Game(self.device, self.seed)
 
-        if TEST_MODEL != -1: # test model to show to user
-            init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
-            set_target_fps(FPS)
-
     def reset(self, seed):
         self.g.Reset(seed)
 
     def train(self):
+        q_table = [[]] # stores q-values for actions at the actual state
+        q_table_new = [
+            [0 for i in range(4)]
+            for j in range(FRAMES_PER_ACTION)
+        ] # stores q-values for actions at current state'
+        action = [
+            [0 for i in range(4)]
+            for j in range(FRAMES_PER_ACTION)
+        ] # current action
+        action_frame = [0 for i in range(FRAMES_PER_ACTION)] # single frame of action; each number = index for action (0 = up, 1 = down, 2 = left, 3 = right)
+
+        while action_frame[FRAMES_PER_ACTION - 1] != 4:
+            action = [
+                [0 for i in range(4)]
+                for j in range(FRAMES_PER_ACTION)
+            ]
+
+            for i in range(len(action_frame)):
+                action[i][action_frame[i]] = 1
+            q_table[len(q_table) - 1].append(self.g.Sim_Update(action))
+
+            action_frame[0] += 1
+            for i in range(FRAMES_PER_ACTION - 1):
+                if action_frame[i] == 4:
+                    action_frame[i] = 0
+                    action_frame[i + 1] += 1
+                else:
+                    break
+
+        exit()
+
         for j in range(FPS * TRAIN_TIME):
             screen = self.g.get_screen()
             self.g.Update(self.test(screen))

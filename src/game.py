@@ -34,35 +34,35 @@ class Game:
         self.bullets.append(Bullet(
             0,
             0,
+            WIDTH,
             BULLET_SIZE,
             0,
             0
         ))
-        self.bullets[0].pos.width = WIDTH
         self.bullets.append(Bullet(
             0,
             HEIGHT - BULLET_SIZE,
+            WIDTH,
             BULLET_SIZE,
             0,
             0
         ))
-        self.bullets[1].pos.width = WIDTH
         self.bullets.append(Bullet(
             0,
             BULLET_SIZE,
             BULLET_SIZE,
+            HEIGHT - BULLET_SIZE * 2,
             0,
             0
         ))
-        self.bullets[2].pos.height = HEIGHT - BULLET_SIZE * 2
         self.bullets.append(Bullet(
             WIDTH - BULLET_SIZE,
             BULLET_SIZE,
             BULLET_SIZE,
+            HEIGHT - BULLET_SIZE * 2,
             0,
             0
         ))
-        self.bullets[3].pos.height = HEIGHT - BULLET_SIZE * 2
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count = FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
@@ -88,6 +88,71 @@ class Game:
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
 
+    def Sim_Update(self, action): # simulates an update w/ multiple frames of keys, and returns change in fitnesss
+        # create copies of changed variables in Update() to rollback once Sim_Update() finishes
+        _untouched_count = self.untouched_count
+        _player = self.player.copy()
+        _bullets = [self.bullets[i].copy() for i in range(len(self.bullets))]
+        _score = self.score
+        _frame_count = self.frame_count
+
+        for keys in action:
+            self.colliding = [False for i in range(len(self.colliding))]
+            if self.untouched_count < FPS * 2 + 1: self.untouched_count += 1
+                
+            self.player.Update(keys)
+            for i in range(len(self.bullets) - 1, -1, -1):
+                self.bullets[i].Update()
+                if self.bullets[i].pos.x <= self.bullets[i].pos.width * -1 or \
+                    self.bullets[i].pos.x >= WIDTH or \
+                    self.bullets[i].pos.y <= self.bullets[i].pos.height * -1 or \
+                    self.bullets[i].pos.y >= HEIGHT:
+                        if BULLET_TYPE == BULLET_RANDOM: self.bullets[i] = self.new_bullet(BULLET_TYPE)
+                        elif BULLET_TYPE == BULLET_HONE:
+                            del self.bullets[i]
+                            continue
+
+            for i in range(len(self.bullets)):
+                if self.is_colliding(Rectangle(
+                    self.player.pos.x - round(self.player.pos.width * 4),
+                    self.player.pos.y - round(self.player.pos.height * 4),
+                    self.player.pos.width * 9,
+                    self.player.pos.height * 9),
+                    self.bullets[i].pos):
+                    if self.colliding[0] == False:
+                        self.colliding[0] = True
+                        self.score -= 1
+                if self.is_colliding(Rectangle(
+                    self.player.pos.x - round(self.player.pos.width * 1.5),
+                    self.player.pos.y - round(self.player.pos.height * 1.5),
+                    self.player.pos.width * 4,
+                    self.player.pos.height * 4),
+                    self.bullets[i].pos):
+                    if self.colliding[1] == False:
+                        self.colliding[1] = True
+                        self.score -= 2
+                if self.is_colliding(self.player.pos, self.bullets[i].pos):
+                    if self.colliding[2] == False:
+                        self.colliding[2] = True
+                        self.score -= 3
+                    self.untouched_count = 0
+            
+            if self.untouched_count == FPS * 2 + 1: self.score += 1
+
+            if BULLET_TYPE == BULLET_HONE:
+                self.frame_count += 1
+                if self.frame_count == FPS // NUM_BULLETS:
+                    self.frame_count = 0
+                    self.bullets.append(self.new_bullet(BULLET_HONE))
+
+        fitness = self.score - _score # difference in fitness is used
+        # restore copies of changed variables
+        self.untouched_count = _untouched_count
+        self.player = _player.copy()
+        self.bullets = [_bullets[i].copy() for i in range(len(_bullets))]
+        self.score = _score
+        self.frame_count = _frame_count
+        return fitness
 
     def Update(self, keys):
         if TEST_MODEL != -1:
@@ -95,7 +160,6 @@ class Game:
             self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
-
         if self.untouched_count < FPS * 2 + 1: self.untouched_count += 1
             
         self.player.Update(keys)
@@ -105,7 +169,8 @@ class Game:
                 self.bullets[i].pos.x >= WIDTH or \
                 self.bullets[i].pos.y <= self.bullets[i].pos.height * -1 or \
                 self.bullets[i].pos.y >= HEIGHT:
-                    if BULLET_TYPE == BULLET_RANDOM: self.bullets[i] = self.new_bullet(BULLET_TYPE)
+                    if BULLET_TYPE == BULLET_RANDOM:
+                        self.bullets[i] = self.new_bullet(BULLET_TYPE)
                     elif BULLET_TYPE == BULLET_HONE:
                         del self.bullets[i]
                         continue
@@ -157,70 +222,71 @@ class Game:
         
         self.player.Draw()
         for i in range(len(self.bullets)): self.bullets[i].Draw()
-        for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
-
-        # minimap
-        s = self.get_screen()
-        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 192 ))
-        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 192 ))
-        for y in range(32):
-            for x in range(32):
-                if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
-
-        # layers
-        for i in range(l_2.shape[0]):
-            for y in range(l_2.shape[1]):
-                for x in range(l_2.shape[2]):
-                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
-                    col = Color( c, c, c, 255 )
-                    draw_rectangle(264 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
-        for i in range(l_3.shape[0]):
-            for y in range(l_3.shape[1]):
-                for x in range(l_3.shape[2]):
-                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
-                    col = Color( c, c, c, 255 )
-                    draw_rectangle(528 + x * 4, i * 32 + y * 4, 4, 4, col)
-        for y in range(l_4.shape[0]):
-            col = Color( c, c, c, 255 )
-            c = round(max(min(float(l_4[y]), 1), 0) * 255)
-            draw_rectangle(568 + (y // 32) * 8, (y % 32) * 8, 8, 8, col)
-        for y in range(l_5.shape[0]):
-            col = Color( c, c, c, 255 )
-            c = round(max(min(float(l_5[y]), 1), 0) * 255)
-            draw_rectangle(608, y * 8, 8, 8, col)
-
-        draw_text(str(self.score), 8, 32, 32, WHITE)
-
-        for i in range(len(self.collide_count)):
-            draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
-
-        k = {
-            0: "U",
-            1: "D",
-            2: "L",
-            3: "R",
-        }
-        for i in k:
-            p = round(max(min(pred[i], 1), -1) * 96)
-            if self.keys[i] == 1:
-                col_text = Color( 0, 255, 0, 192 )
-                col_rect = Color( 0, 255, 0, 192 )
-                draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
-            else:
-                col_text = Color( 255, 255, 255, 192 )
-                if p > 0:
-                    col_rect = Color( 255, 255, 255, 192 )
-                    draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
-                else:
-                    col_rect = Color( 255, 0, 0, 192 )
-                    draw_rectangle(24 + i * 32, 684, 24, p * -1, col_rect)
-            draw_text(k[i], 24 + i * 32, 668, 32, col_text)
+#        for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
+#
+#        # minimap
+#        s = self.get_screen()
+#        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 192 ))
+#        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 192 ))
+#        for y in range(32):
+#            for x in range(32):
+#                if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
+#
+#        # layers
+#        for i in range(l_2.shape[0]):
+#            for y in range(l_2.shape[1]):
+#                for x in range(l_2.shape[2]):
+#                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
+#                    col = Color( c, c, c, 255 )
+#                    draw_rectangle(264 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
+#        for i in range(l_3.shape[0]):
+#            for y in range(l_3.shape[1]):
+#                for x in range(l_3.shape[2]):
+#                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
+#                    col = Color( c, c, c, 255 )
+#                    draw_rectangle(528 + x * 4, i * 32 + y * 4, 4, 4, col)
+#        for y in range(l_4.shape[0]):
+#            col = Color( c, c, c, 255 )
+#            c = round(max(min(float(l_4[y]), 1), 0) * 255)
+#            draw_rectangle(568 + (y // 32) * 8, (y % 32) * 8, 8, 8, col)
+#        for y in range(l_5.shape[0]):
+#            col = Color( c, c, c, 255 )
+#            c = round(max(min(float(l_5[y]), 1), 0) * 255)
+#            draw_rectangle(608, y * 8, 8, 8, col)
+#
+#        draw_text(str(self.score), 8, 32, 32, WHITE)
+#
+#        for i in range(len(self.collide_count)):
+#            draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
+#
+#        k = {
+#            0: "U",
+#            1: "D",
+#            2: "L",
+#            3: "R",
+#        }
+#        for i in k:
+#            p = round(max(min(pred[i], 1), -1) * 96)
+#            if self.keys[i] == 1:
+#                col_text = Color( 0, 255, 0, 192 )
+#                col_rect = Color( 0, 255, 0, 192 )
+#                draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
+#            else:
+#                col_text = Color( 255, 255, 255, 192 )
+#                if p > 0:
+#                    col_rect = Color( 255, 255, 255, 192 )
+#                    draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
+#                else:
+#                    col_rect = Color( 255, 0, 0, 192 )
+#                    draw_rectangle(24 + i * 32, 684, 24, p * -1, col_rect)
+#            draw_text(k[i], 24 + i * 32, 668, 32, col_text)
 
     def new_bullet(self, b):
         if b == BULLET_RANDOM:
             return Bullet(
                 self.rng.randint(0, WIDTH - 1),
                 BULLET_SIZE * -1 + 1,
+                BULLET_SIZE,
                 BULLET_SIZE,
                 round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, 240 // FPS),
                 self.rng.randint(1, 480 // FPS)
@@ -266,7 +332,14 @@ class Game:
                     v_x = (p_x - WIDTH) * BULLET_HONE_SPEED / hyp
                 v_y = adj * BULLET_HONE_SPEED / hyp
 
-            return Bullet(b_x - BULLET_SIZE // 2, b_y - BULLET_SIZE // 2, BULLET_SIZE, v_x, v_y)
+            return Bullet(
+                b_x - BULLET_SIZE // 2,
+                b_y - BULLET_SIZE // 2,
+                BULLET_SIZE,
+                BULLET_SIZE,
+                v_x,
+                v_y
+            )
 
     def is_colliding(self, r1, r2):
         if (r1.x == r2.x or \

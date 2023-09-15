@@ -10,6 +10,7 @@ PLAYER_SIZE = 8
 
 NUM_BULLETS = 2
 NUM_PROCESSES = 12
+FRAMES_PER_ACTION = 4
 NUM_MODELS = 48 # must be divisible by 4 (to divide into exact quarters)
 NUM_MODELS_PER_PROCESS = round(NUM_MODELS / NUM_PROCESSES)
 TRAIN_TIME = 5 # seconds

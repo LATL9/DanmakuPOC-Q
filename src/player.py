@@ -1,6 +1,5 @@
 from common import *
 
-import math
 from pyray import *
 
 class Player:
@@ -8,6 +7,9 @@ class Player:
 
     def __init__(self, x, y, size):
         self.pos = Rectangle(x, y, size, size)
+
+    def copy(self):
+        return Player(self.pos.x, self.pos.y, self.pos.width)
 
     # keys: 0 = up, 1 = down, 2 = left, 3 = right
     def Update(self, keys):
