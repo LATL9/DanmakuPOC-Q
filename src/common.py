@@ -1,5 +1,3 @@
-import torch.multiprocessing as mp
-
 TRAIN_MODEL = False # true = train, false = test
 WIDTH = 800
 HEIGHT = 800
