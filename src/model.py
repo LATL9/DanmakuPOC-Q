@@ -31,7 +31,7 @@ class NNModel:
         max_q_value = -9e99 # stores max q-value for actions from state'
 
         for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
-            if True:
+            if TRAIN_MODEL:
                 exp_inps.append(self.g.get_screen())
                 exp_outs.append(torch.zeros(FRAMES_PER_ACTION, 4))
                 q_table.append([])
