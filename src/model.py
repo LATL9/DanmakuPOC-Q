@@ -22,7 +22,7 @@ class NNModel:
 
     def train(self):
         if not TRAIN_MODEL: # test model to show to user
-            init_window(WIDTH, HEIGHT, "DanmakuPOC")
+            init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
             set_target_fps(FPS)
 
         exp_inps = [] # expected tensor inputs (get_screen())
