@@ -154,7 +154,7 @@ class Game:
         self.frame_count = _frame_count
         return fitness
 
-    def Update(self, action, l_2=0, l_3=0, l_4=0, l_5, pred=0): # extra paramters used when not TRAIN_MODEL
+    def Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, pred=0): # extra paramters used when not TRAIN_MODEL
         for keys in action:
             if not TRAIN_MODEL:
                 self.keys = keys
@@ -221,13 +221,12 @@ class Game:
             if not TRAIN_MODEL:
                 begin_drawing()
                 self.g.Draw(
-                    self.l_2,
-                    self.l_3,
-                    self.l_4,
-                    self.l_5,
-                    self.pred
+                    l_2,
+                    l_3,
+                    l_4,
+                    l_5,
+                    pred
                 )
-                draw_text(str(j), 8, 64, 32, WHITE)
                 draw_fps(8, 8)
                 end_drawing()
 
@@ -236,64 +235,64 @@ class Game:
         
         self.player.Draw()
         for i in range(len(self.bullets)): self.bullets[i].Draw()
-        # TODO: get the comment code working (or remove)
-#
-#        # minimap
-#        s = self.get_screen()
-#        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 192 ))
-#        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 192 ))
-#        for y in range(32):
-#            for x in range(32):
-#                if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
-#
-#        # layers
-#        for i in range(l_2.shape[0]):
-#            for y in range(l_2.shape[1]):
-#                for x in range(l_2.shape[2]):
-#                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
-#                    col = Color( c, c, c, 255 )
-#                    draw_rectangle(264 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
-#        for i in range(l_3.shape[0]):
-#            for y in range(l_3.shape[1]):
-#                for x in range(l_3.shape[2]):
-#                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
-#                    col = Color( c, c, c, 255 )
-#                    draw_rectangle(528 + x * 4, i * 32 + y * 4, 4, 4, col)
-#        for y in range(l_4.shape[0]):
-#            col = Color( c, c, c, 255 )
-#            c = round(max(min(float(l_4[y]), 1), 0) * 255)
-#            draw_rectangle(568 + (y // 32) * 8, (y % 32) * 8, 8, 8, col)
-#        for y in range(l_5.shape[0]):
-#            col = Color( c, c, c, 255 )
-#            c = round(max(min(float(l_5[y]), 1), 0) * 255)
-#            draw_rectangle(608, y * 8, 8, 8, col)
-#
-#        draw_text(str(self.score), 8, 32, 32, WHITE)
-#
-#        for i in range(len(self.collide_count)):
-#            draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
-#
-#        k = {
-#            0: "U",
-#            1: "D",
-#            2: "L",
-#            3: "R",
-#        }
-#        for i in k:
-#            p = round(max(min(pred[i], 1), -1) * 96)
-#            if self.keys[i] == 1:
-#                col_text = Color( 0, 255, 0, 192 )
-#                col_rect = Color( 0, 255, 0, 192 )
-#                draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
-#            else:
-#                col_text = Color( 255, 255, 255, 192 )
-#                if p > 0:
-#                    col_rect = Color( 255, 255, 255, 192 )
-#                    draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
-#                else:
-#                    col_rect = Color( 255, 0, 0, 192 )
-#                    draw_rectangle(24 + i * 32, 684, 24, p * -1, col_rect)
-#            draw_text(k[i], 24 + i * 32, 668, 32, col_text)
+        for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
+
+        # minimap
+        s = self.get_screen()
+        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 192 ))
+        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 192 ))
+        for y in range(32):
+            for x in range(32):
+                if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
+
+        # layers
+        for i in range(l_2.shape[0]):
+            for y in range(l_2.shape[1]):
+                for x in range(l_2.shape[2]):
+                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
+                    col = Color( c, c, c, 255 )
+                    draw_rectangle(264 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
+        for i in range(l_3.shape[0]):
+            for y in range(l_3.shape[1]):
+                for x in range(l_3.shape[2]):
+                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
+                    col = Color( c, c, c, 255 )
+                    draw_rectangle(528 + x * 4, i * 32 + y * 4, 4, 4, col)
+        for y in range(l_4.shape[0]):
+            col = Color( c, c, c, 255 )
+            c = round(max(min(float(l_4[y]), 1), 0) * 255)
+            draw_rectangle(568 + (y // 32) * 8, (y % 32) * 8, 8, 8, col)
+        for y in range(l_5.shape[0]):
+            col = Color( c, c, c, 255 )
+            c = round(max(min(float(l_5[y]), 1), 0) * 255)
+            draw_rectangle(608, y * 8, 8, 8, col)
+
+        draw_text(str(self.score), 8, 32, 32, WHITE)
+
+        for i in range(len(self.collide_count)):
+            draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
+
+        k = {
+            0: "U",
+            1: "D",
+            2: "L",
+            3: "R",
+        }
+        for i in k:
+            p = round(max(min(pred[i], 1), -1) * 96)
+            if self.keys[i] == 1:
+                col_text = Color( 0, 255, 0, 192 )
+                col_rect = Color( 0, 255, 0, 192 )
+                draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
+            else:
+                col_text = Color( 255, 255, 255, 192 )
+                if p > 0:
+                    col_rect = Color( 255, 255, 255, 192 )
+                    draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
+                else:
+                    col_rect = Color( 255, 0, 0, 192 )
+                    draw_rectangle(24 + i * 32, 684, 24, p * -1, col_rect)
+            draw_text(k[i], 24 + i * 32, 668, 32, col_text)
 
     def new_bullet(self, b):
         if b == BULLET_RANDOM:

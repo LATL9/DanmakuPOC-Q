@@ -19,6 +19,10 @@ class NNModel:
         self.g.Reset(seed)
 
     def train(self):
+        if not TRAIN_MODEL: # test model to show to user
+            init_window(WIDTH, HEIGHT, "DanmakuPOC")
+            set_target_fps(FPS)
+
         exp_inps = [] # expected tensor inputs (get_screen())
         exp_outs = [] # expected tensor outputs (actions)
         q_table = [] # stores q-values for actions at the actual state
@@ -91,21 +95,27 @@ class NNModel:
             print(j)
 
             screen = self.g.get_screen()
-            self.g.Update(self.test(screen))
-            #self.g.Update(exp_outs[-1])
-
-            if not TRAIN_MODEL:
-                begin_drawing()
-                self.g.Draw(
+            action_model = self.test(self.g.get_screen())
+            if TRAIN_MODEL:
+                self.g.Update(action_model)
+            else:
+                self.g.Update(
+                    action_model,
                     self.l_2,
                     self.l_3,
                     self.l_4,
                     self.l_5,
                     self.pred
                 )
-                draw_text(str(j), 8, 64, 32, WHITE)
-                draw_fps(8, 8)
-                end_drawing()
+                # if this Update() is used instead, the action with the highest q-value will be used as input, rather than the model's
+                #self.g.Update(
+                #    exp_outs[-1],
+                #    self.l_2,
+                #    self.l_3,
+                #    self.l_4,
+                #    self.l_5,
+                #    self.pred
+                #)
 
             print(q_table[-1])
             print("Best is {} with fitness {}".format(action_dec, max_q_value))
@@ -117,6 +127,7 @@ class NNModel:
             [0 for i in range(4)]
             for j in range(FRAMES_PER_ACTION)
         ]
+
         # l_x = xth layer in model
         self.l_2 = self.model[:4](x)
         self.l_3 = self.model[4:8](self.l_2)
