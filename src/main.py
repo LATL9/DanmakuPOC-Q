@@ -32,7 +32,7 @@ if __name__ == '__main__':
         nn.ReLU(),
         nn.Linear(128, 32),
         nn.ReLU(),
-        nn.Linear(32, 4)
+        nn.Linear(32, 4 * FRAMES_PER_ACTION)
      ).to(device)
 
     try:
