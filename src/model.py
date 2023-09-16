@@ -94,7 +94,7 @@ class NNModel:
             self.g.Update(self.test(screen))
             #self.g.Update(exp_outs[-1])
 
-            if TEST_MODEL != -1:
+            if not TRAIN_MODEL:
                 begin_drawing()
                 self.g.Draw(
                     self.l_2,

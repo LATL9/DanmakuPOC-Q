@@ -42,7 +42,7 @@ if __name__ == '__main__':
             model.load_state_dict(checkpoint['model_state_dict'.format(i)])
             model.to(device)
 
-        if TEST_MODEL != -1:
+        if not TRAIN_MODEL:
             rankings_r = open("rankings.csv", 'r').readlines()
             seed = float(rankings_r[len(rankings_r) - 1].split(', ')[1])
         print("Restarting from checkpoint at epoch {}.".format(epoch))
@@ -59,10 +59,10 @@ if __name__ == '__main__':
     while True:
         epoch += 1
 
-        if TEST_MODEL == -1: seed = int(time.time())
+        if TRAIN_MODEL: seed = int(time.time())
         fitness = train()
 
-        if TEST_MODEL != -1: exit() # if testing, exit now
+        if not TRAIN_MODEL: exit() # if testing, exit now
 
         log.write("{}, {}, {}\n".format(
             time.asctime(),

@@ -18,7 +18,7 @@ class Game:
     score = 0
     colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
     untouched_count = -1 # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
-    if TEST_MODEL != -1:
+    if not TRAIN_MODEL:
         collides = [] # shows collisions (used for demonstration, not in training)
         collide_count = [] # no of frames each hitbox is touched
 
@@ -70,7 +70,7 @@ class Game:
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
 
-        if TEST_MODEL != -1:
+        if not TRAIN_MODEL:
             self.collide_count = [0 for i in range(3)]
 
     def Reset(self, seed):
@@ -154,9 +154,9 @@ class Game:
         self.frame_count = _frame_count
         return fitness
 
-    def Update(self, action):
+    def Update(self, action, l_2=0, l_3=0, l_4=0, l_5, pred=0): # extra paramters used when not TRAIN_MODEL
         for keys in action:
-            if TEST_MODEL != -1:
+            if not TRAIN_MODEL:
                 self.keys = keys
                 self.collides = []
 
@@ -186,7 +186,7 @@ class Game:
                     if self.colliding[0] == False:
                         self.colliding[0] = True
                         self.score -= 1
-                    if TEST_MODEL != -1:
+                    if not TRAIN_MODEL:
                         self.collides.append(i);
                         self.collide_count[0] += 1
                 if self.is_colliding(Rectangle(
@@ -198,7 +198,7 @@ class Game:
                     if self.colliding[1] == False:
                         self.colliding[1] = True
                         self.score -= 2
-                    if TEST_MODEL != -1:
+                    if not TRAIN_MODEL:
                         self.collides.append(i);
                         self.collide_count[1] += 1
                 if self.is_colliding(self.player.pos, self.bullets[i].pos):
@@ -206,7 +206,7 @@ class Game:
                         self.colliding[2] = True
                         self.score -= 3
                     self.untouched_count = 0 # reset "untouched" count (bullet hits player)
-                    if TEST_MODEL != -1:
+                    if not TRAIN_MODEL:
                         self.collides.append(i);
                         self.collide_count[2] += 1
             
@@ -217,6 +217,19 @@ class Game:
                 if self.frame_count == FPS // NUM_BULLETS:
                     self.frame_count = 0
                     self.bullets.append(self.new_bullet(BULLET_HONE))
+
+            if not TRAIN_MODEL:
+                begin_drawing()
+                self.g.Draw(
+                    self.l_2,
+                    self.l_3,
+                    self.l_4,
+                    self.l_5,
+                    self.pred
+                )
+                draw_text(str(j), 8, 64, 32, WHITE)
+                draw_fps(8, 8)
+                end_drawing()
 
     def Draw(self, l_2, l_3, l_4, l_5, pred):
         clear_background(BLACK)
