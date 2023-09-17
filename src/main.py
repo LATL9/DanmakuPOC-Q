@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # optimisation
     criterion = nn.BCELoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=0.9)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
     try:
         checkpoint = torch.load("models/model.pt", map_location=device)
