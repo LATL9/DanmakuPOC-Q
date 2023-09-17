@@ -20,6 +20,6 @@ BULLET_HONE = 1 # NUM_BULLETS represents number of bullets fired per second when
 BULLET_HONE_SPEED = HEIGHT / (FPS * 3) # will be on screen for at most 3 secs
 BULLET_TYPE = BULLET_HONE # current type
 
-LEARNING_RATE = 5e-3
+LEARNING_RATE = 2e-3
 DISCOUNT_RATE = 0.75
 FRAMES_PER_ACTION = 3 # must be > 1, otherwise code in train() in Model will break
