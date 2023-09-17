@@ -4,40 +4,43 @@ from game import *
 
 import os
 
-def calc_q_value(q_table_dict, g, index, start, end): # index = start in decimal; end of range of actions is exclusive
-    action = start # current action; each number = index for action (0 = up, 1 = down, 2 = left, 3 = right)
-    g = Game(*g)
+def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in decimal; end of range of actions is exclusive
+    for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
+        while f == len(game_dict): pass # wait until current frame is ready
+        i = index
+        action = start.copy() # current action; each number = index for action (0 = up, 1 = down, 2 = left, 3 = right)
+        g = Game(*game_dict[f]) # get current frame of game from train()
 
-    while action != end:
-        # new instance of Game means Update() can be run once for action and Sim_Update() for action_new
-        _g = g.copy()
-        fitness = _g.score
-        q_value = _g.Action_Update(action) - fitness
-        action_new = [0 for i in range(FRAMES_PER_ACTION)] # current action for state'
-        max_q_value = -9e99
+        while action != end:
+            # new instance of Game means Update() can be run once for action and Sim_Update() for action_new
+            _g = g.copy()
+            fitness = _g.score
+            q_value = _g.Action_Update(action) - fitness
+            action_new = [0 for j in range(FRAMES_PER_ACTION)] # current action for state'
+            max_q_value = -9e99
 
-        while action_new[FRAMES_PER_ACTION - 1] != 4:
-            max_q_value = max(max_q_value, _g.Sim_Update(action_new) - fitness)
+            while action_new[FRAMES_PER_ACTION - 1] != 4:
+                max_q_value = max(max_q_value, _g.Sim_Update(action_new) - fitness)
 
-            action_new[0] += 1
-            for i in range(FRAMES_PER_ACTION - 1):
-                if action_new[i] == 4:
-                    action_new[i] = 0
-                    action_new[i + 1] += 1
+                action_new[0] += 1
+                for j in range(FRAMES_PER_ACTION - 1):
+                    if action_new[j] == 4:
+                        action_new[j] = 0
+                        action_new[j + 1] += 1
+                    else:
+                        break
+
+            q_value += LEARNING_RATE * (q_value + DISCOUNT_RATE * max_q_value) # reward and q-value are the same at this point, so they're ommited from equation as they cancel each other out
+            q_table_dict[i] = q_value # write q_value to static dictionary
+
+            i += 1
+            action[0] += 1
+            for j in range(FRAMES_PER_ACTION - 1):
+                if action[j] == 4:
+                    action[j] = 0
+                    action[j + 1] += 1
                 else:
                     break
-
-        q_value += LEARNING_RATE * (q_value + DISCOUNT_RATE * max_q_value) # reward and q-value are the same at this point, so they're ommited from equation as they cancel each other out
-        q_table_dict[index] = q_value # write q_value to static dictionary
-
-        index += 1
-        action[0] += 1
-        for i in range(FRAMES_PER_ACTION - 1):
-            if action[i] == 4:
-                action[i] = 0
-                action[i + 1] += 1
-            else:
-                break
 
 class NNModel:
     def __init__(self, device, seed, model):
@@ -62,7 +65,7 @@ class NNModel:
     def train(self):
         if TRAIN_MODEL:
             jobs = []
-            q_table_manager = mp.Manager()
+            manager = mp.Manager()
             arrows = {
                 0: '↑',
                 1: '↓',
@@ -78,30 +81,33 @@ class NNModel:
             init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
             set_target_fps(FPS)
 
+        self.game_dict = manager.dict()
+        self.q_table_dict = manager.dict()
+        jobs = list()
+        for i in range(NUM_PROCESSES):
+            index = i * pow(4, FRAMES_PER_ACTION) // NUM_PROCESSES
+            jobs.append(mp.Process(target=calc_q_value, args=(
+                self.game_dict,
+                self.q_table_dict,
+                index,
+                self.to_base4(index),
+                self.to_base4((i + 1) * pow(4, FRAMES_PER_ACTION) // NUM_PROCESSES),
+            )))
+        for i in range(NUM_PROCESSES):
+            jobs[i].start()
+
         for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
             screen = self.g.get_screen()
-            g_export = self.g.export()
             if TRAIN_MODEL:
                 exp_inps.append(screen)
                 exp_outs.append(torch.zeros(FRAMES_PER_ACTION, 4).to(self.device))
 
-                self.q_table_dict = q_table_manager.dict()
-                jobs = list()
-                for i in range(NUM_PROCESSES):
-                    index = i * pow(4, FRAMES_PER_ACTION) // NUM_PROCESSES
-                    jobs.append(mp.Process(target=calc_q_value, args=(
-                        self.q_table_dict,
-                        g_export,
-                        index,
-                        self.to_base4(index),
-                        self.to_base4((i + 1) * pow(4, FRAMES_PER_ACTION) // NUM_PROCESSES),
-                    )))
-                for i in range(NUM_PROCESSES):
-                    jobs[i].start()
-                for i in range(NUM_PROCESSES):
-                    jobs[i].join()
-
+                self.game_dict[f] = self.g.export() # processes will start once next instance of Game() is available
+                while len(self.q_table_dict) != pow(4, FRAMES_PER_ACTION):
+                    pass # wait until all processes are "complete" (are waiting for next frame)
                 q_table.append(list({k: v for k, v in sorted(self.q_table_dict.items(), key=lambda item: item[0])}.values()))
+                for i in range(pow(4, FRAMES_PER_ACTION)):
+                    del self.q_table_dict[i]
 
                 print("Frame {}/{}: ".format(f, round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
                 max_q_value = max(q_table[-1])
@@ -122,6 +128,9 @@ class NNModel:
                     self.l_5,
                     self.pred
                 )
+
+        for i in range(NUM_PROCESSES):
+            jobs[i].join()
 
         return {
             'fitness': self.g.score,
