@@ -97,7 +97,7 @@ class Game:
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
 
-    def Sim_Update(self, action): # simulates an update w/ multiple frames of keys, and returns change in fitnesss
+    def Sim_Update(self, action): # simulates an update and returns change in fitnesss
         # create copies of changed variables in Update() to rollback once Sim_Update() finishes
         _untouched_count = self.untouched_count
         _player = self.player.copy()
@@ -117,9 +117,12 @@ class Game:
         return fitness
 
     def Action_Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, pred=0): # action is FRAME_PER_ACTION frames of input
-        for keys in action:
+        for key in action:
+            # converts int representation into one-hot vector as input
+            if type(key) is int:
+                key = torch.Tensor([1 if i == key else 0 for i in range(4)])
             self.Update(
-                keys,
+                key,
                 l_2,
                 l_3,
                 l_4,
