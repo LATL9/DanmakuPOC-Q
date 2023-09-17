@@ -58,7 +58,7 @@ if __name__ == '__main__':
     except FileNotFoundError:
         epoch = 0
         log = open("log.csv", 'w')
-        log.write("Time, Epoch, FItness, Error\n") # header
+        log.write("Time, Epoch, Error\n") # header
         rankings = open("rankings.csv", 'w')
         rankings.write("Epoch, Seed\n") # header
 
@@ -73,9 +73,8 @@ if __name__ == '__main__':
         fitness = results['fitness']
 
         if not TRAIN_MODEL:
-            print("Epoch {}: Fitness = {}, Error = {}".format(
+            print("Epoch {}: Error = {}".format(
                 epoch,
-                fitness,
                 error
             ))
             exit() # if testing, exit now
@@ -119,8 +118,7 @@ if __name__ == '__main__':
             torch.save(checkpoint, "models/model-{}.pt".format(epoch))
             os.system("cp models/model-{}.pt models/model.pt".format(epoch)) # model.pt = most recent
 
-        print("Epoch {}: Fitness = {}, Error = {}".format(
+        print("Epoch {}: Error = {}".format(
             epoch,
-            fitness,
             error
         ))

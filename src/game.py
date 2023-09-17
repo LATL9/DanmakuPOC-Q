@@ -12,63 +12,75 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Game:
-    def __init__(self, device, seed):
+    def __init__(self, device, seed, untouched_count=0, player=False, bullets=False, score=0, frame_count=False, collide_count=False):
         self.device = device
+        self.seed = seed
         self.rng = random.Random(seed)
-        if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
-        else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
-        self.score = 0
+        if player:
+            self.player = Player(*player)
+        else:
+            if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
+            else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
+        self.score = score
         self.colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
-        self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
+        self.untouched_count = untouched_count # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
 
         if not TRAIN_MODEL:
             collides = [] # shows collisions (used for demonstration, not in training)
             collide_count = [] # no of frames each hitbox is touched
 
-
-        # edge barrier
-        self.bullets = []
-        self.bullets.append(Bullet(
-            0,
-            0,
-            WIDTH,
-            BULLET_SIZE,
-            0,
-            0
-        ))
-        self.bullets.append(Bullet(
-            0,
-            HEIGHT - BULLET_SIZE,
-            WIDTH,
-            BULLET_SIZE,
-            0,
-            0
-        ))
-        self.bullets.append(Bullet(
-            0,
-            BULLET_SIZE,
-            BULLET_SIZE,
-            HEIGHT - BULLET_SIZE * 2,
-            0,
-            0
-        ))
-        self.bullets.append(Bullet(
-            WIDTH - BULLET_SIZE,
-            BULLET_SIZE,
-            BULLET_SIZE,
-            HEIGHT - BULLET_SIZE * 2,
-            0,
-            0
-        ))
+        if bullets:
+            self.bullets = [Bullet(*b) for b in bullets]
+        else:
+            # edge barrier
+            self.bullets = []
+            self.bullets.append(Bullet(
+                0,
+                0,
+                WIDTH,
+                BULLET_SIZE,
+                0,
+                0
+            ))
+            self.bullets.append(Bullet(
+                0,
+                HEIGHT - BULLET_SIZE,
+                WIDTH,
+                BULLET_SIZE,
+                0,
+                0
+            ))
+            self.bullets.append(Bullet(
+                0,
+                BULLET_SIZE,
+                BULLET_SIZE,
+                HEIGHT - BULLET_SIZE * 2,
+                0,
+                0
+            ))
+            self.bullets.append(Bullet(
+                WIDTH - BULLET_SIZE,
+                BULLET_SIZE,
+                BULLET_SIZE,
+                HEIGHT - BULLET_SIZE * 2,
+                0,
+                0
+            ))
 
         if BULLET_TYPE == BULLET_HONE:
-            self.frame_count = FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
+            if frame_count:
+                self.frame_count = frame_count
+            else:
+                self.frame_count = FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
         else:
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
 
         if not TRAIN_MODEL:
-            self.collide_count = [0 for i in range(3)]
+            if collide_count:
+                self.collide_count = collide_count
+            else:
+                self.collide_count = [0 for i in range(3)]
 
     def copy(self):
         g = Game(self.device, self.seed)
@@ -79,8 +91,31 @@ class Game:
         g.frame_count = self.frame_count
         if not TRAIN_MODEL:
             g.collide_count = self.collide_count
-
         return g
+
+    # Linux (and possibly macOS) can serialise objects to use w/ multiprocessing; Windows doesn't support this, so the needed members are exported and used to create an identical Game() instance
+    def export(self): # get arguments to reinit object
+        return (
+            self.device,
+            self.seed,
+            self.untouched_count,
+            (
+                self.player.pos.x,
+                self.player.pos.y,
+                self.player.pos.width # or height, as both (should be) same value
+            ),
+            [(
+                self.bullets[i].pos.x,
+                self.bullets[i].pos.y,
+                self.bullets[i].pos.width,
+                self.bullets[i].pos.height,
+                self.bullets[i].v_x,
+                self.bullets[i].v_y
+            ) for i in range(len(self.bullets))],
+            self.score,
+            self.frame_count,
+            False if TRAIN_MODEL else self.collide_count
+        )
 
     def Reset(self, seed):
         self.rng = random.Random(seed)
@@ -105,9 +140,8 @@ class Game:
         _score = self.score
         _frame_count = self.frame_count
 
-        self.Action_Update(action)
+        fitness = self.Action_Update(action)
 
-        fitness = self.score - _score # difference in fitness is used
         # restore copies of changed variables
         self.untouched_count = _untouched_count
         self.player = _player.copy()
@@ -120,8 +154,8 @@ class Game:
         for key in action:
             # converts int representation into one-hot vector as input
             if type(key) is int:
-                key = torch.Tensor([1 if i == key else 0 for i in range(4)])
-            self.Update(
+                key = [1 if i == key else 0 for i in range(4)]
+            return self.Update(
                 key,
                 l_2,
                 l_3,
@@ -204,6 +238,8 @@ class Game:
             )
             draw_fps(8, 8)
             end_drawing()
+
+        return self.score
 
     def Draw(self, l_2, l_3, l_4, l_5, pred):
         clear_background(BLACK)

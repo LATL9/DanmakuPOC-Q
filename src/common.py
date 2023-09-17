@@ -1,4 +1,4 @@
-TRAIN_MODEL = False # true = train, false = test
+TRAIN_MODEL = True # true = train, false = test
 WIDTH = 800
 HEIGHT = 800
 FPS = 30
@@ -7,7 +7,7 @@ BULLET_SIZE = 12
 PLAYER_SIZE = 8
 
 NUM_BULLETS = 2
-NUM_PROCESSES = 12
+NUM_PROCESSES = 8
 NUM_MODELS = 48 # must be divisible by 4 (to divide into exact quarters)
 NUM_MODELS_PER_PROCESS = round(NUM_MODELS / NUM_PROCESSES)
 TRAIN_TIME = 16 # seconds
