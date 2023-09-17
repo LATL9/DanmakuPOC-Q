@@ -4,10 +4,6 @@ import math
 from pyray import *
 
 class Bullet:
-    pos = Rectangle(-1, -1, -1, -1)
-    v_x = -1
-    v_y = -1
-
     def __init__(self, x, y, w, h, v_x, v_y):
         self.pos = Rectangle(x, y, w, h)
         self.v_x = v_x

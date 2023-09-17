@@ -4,12 +4,6 @@ from game import *
 import os
 
 class NNModel:
-    device = -1
-    rng = -1
-    g = -1
-    model = -1
-    pred = -1
-
     def __init__(self, device, seed, model):
         self.device = device
         self.rng = random.Random(seed)

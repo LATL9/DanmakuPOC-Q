@@ -12,23 +12,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Game:
-    device = -1
-    rng = -1
-    bullets = []
-    player = Player(-1, -1, -1)
-    score = 0
-    colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
-    untouched_count = -1 # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
-    if not TRAIN_MODEL:
-        collides = [] # shows collisions (used for demonstration, not in training)
-        collide_count = [] # no of frames each hitbox is touched
-
     def __init__(self, device, seed):
         self.device = device
         self.rng = random.Random(seed)
         if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
         else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
         self.score = 0
+        self.colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
+        self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
+
+        if not TRAIN_MODEL:
+            collides = [] # shows collisions (used for demonstration, not in training)
+            collide_count = [] # no of frames each hitbox is touched
+
 
         # edge barrier
         self.bullets = []

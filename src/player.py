@@ -3,8 +3,6 @@ from common import *
 from pyray import *
 
 class Player:
-    pos = Rectangle(-1, -1, -1, -1)
-
     def __init__(self, x, y, size):
         self.pos = Rectangle(x, y, size, size)
 

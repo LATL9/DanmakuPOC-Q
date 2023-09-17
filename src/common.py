@@ -1,4 +1,4 @@
-TRAIN_MODEL = True # true = train, false = test
+TRAIN_MODEL = False # true = train, false = test
 WIDTH = 800
 HEIGHT = 800
 FPS = 30
