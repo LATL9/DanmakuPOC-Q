@@ -2,7 +2,6 @@ from common import *
 
 from game import *
 
-import multiprocessing as mp
 import os
 
 def calc_q_value(q_table_dict, g, index, start, end): # index = start in decimal; end of range of actions is exclusive
