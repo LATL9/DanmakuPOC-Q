@@ -29,11 +29,18 @@ class NNModel:
         exp_outs = [] # expected tensor outputs (actions)
         q_table = [] # stores q-values for actions at the actual state
         max_q_value = -9e99 # stores max q-value for actions from state'
+        arrows = {
+            0: '↑',
+            1: '↓',
+            2: '←',
+            3: '→'
+        }
 
         for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
+            screen = self.g.get_screen()
             if TRAIN_MODEL:
-                exp_inps.append(self.g.get_screen())
-                exp_outs.append(torch.zeros(FRAMES_PER_ACTION, 4))
+                exp_inps.append(screen)
+                exp_outs.append(torch.zeros(FRAMES_PER_ACTION, 4).to(self.device))
                 q_table.append([])
 
                 action = [
@@ -88,16 +95,17 @@ class NNModel:
                 action_dec = self.rng.choice([index for (index, item) in enumerate(q_table[-1]) if item == max_q_value]) # index for selected action
 
                 j = action_dec
+                print("{}/{}: ".format(f + 1, round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
                 for i in range(FRAMES_PER_ACTION - 1, -1 ,-1):
                     exp_outs[-1][i][j // pow(4, i)] = 1
+                    print(arrows[j // pow(4, i)], end='')
                     j -= pow(4, i) * (j // pow(4, i))
 
-            if TRAIN_MODEL:
-                self.g.Update(exp_outs[-1])
+                self.g.Action_Update(exp_outs[-1])
                 exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
-                print("Best is {}, fitness {}".format(action_dec, max_q_value))
+                print(", q-value {}".format(max_q_value), end='\r')
             else:
-                self.g.Update(
+                self.g.Action_Update(
                     self.test(screen),
                     self.l_2,
                     self.l_3,
@@ -113,12 +121,12 @@ class NNModel:
         }
         
     def test(self, x):
-        model_action = torch.zeros(FRAMES_PER_ACTION, 4)
+        model_action = torch.zeros(FRAMES_PER_ACTION, 4).to(self.device)
 
         # l_x = xth layer in model
         self.l_2 = self.model[:4](x)
-        self.l_3 = self.model[4:8](self.l_2)
-        self.l_4 = self.model[8:11](self.l_3)
+        self.l_3 = self.model[4:8](self.l_2).flatten() # batch inputs aren't used (adds an extra dimension), so flatten() used instead
+        self.l_4 = self.model[9:11](self.l_3)
         self.l_5 = self.model[11:13](self.l_4)
         y = self.model[13:](self.l_5)
         self.pred = [float(f) for f in y]

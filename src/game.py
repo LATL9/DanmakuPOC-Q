@@ -74,6 +74,18 @@ class Game:
         if not TRAIN_MODEL:
             self.collide_count = [0 for i in range(3)]
 
+    def copy(self):
+        g = Game(self.device, self.seed)
+        g.untouched_count = self.untouched_count
+        g.player = self.player
+        g.bullets = [self.bullets[i].copy() for i in range(len(self.bullets))]
+        g.score = self.score
+        g.frame_count = self.frame_count
+        if not TRAIN_MODEL:
+            g.collide_count = self.collide_count
+
+        return g
+
     def Reset(self, seed):
         self.rng = random.Random(seed)
         if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
@@ -97,54 +109,7 @@ class Game:
         _score = self.score
         _frame_count = self.frame_count
 
-        for keys in action:
-            self.colliding = [False for i in range(len(self.colliding))]
-            if self.untouched_count < FPS * 0.2 + 1: self.untouched_count += 1
-                
-            self.player.Update(keys)
-            for i in range(len(self.bullets) - 1, -1, -1):
-                self.bullets[i].Update()
-                if self.bullets[i].pos.x <= self.bullets[i].pos.width * -1 or \
-                    self.bullets[i].pos.x >= WIDTH or \
-                    self.bullets[i].pos.y <= self.bullets[i].pos.height * -1 or \
-                    self.bullets[i].pos.y >= HEIGHT:
-                        if BULLET_TYPE == BULLET_RANDOM: self.bullets[i] = self.new_bullet(BULLET_TYPE)
-                        elif BULLET_TYPE == BULLET_HONE:
-                            del self.bullets[i]
-                            continue
-
-            for i in range(len(self.bullets)):
-                if self.is_colliding(Rectangle(
-                    self.player.pos.x - round(self.player.pos.width * 4),
-                    self.player.pos.y - round(self.player.pos.height * 4),
-                    self.player.pos.width * 9,
-                    self.player.pos.height * 9),
-                    self.bullets[i].pos):
-                    if self.colliding[0] == False:
-                        self.colliding[0] = True
-                        self.score -= 1
-                if self.is_colliding(Rectangle(
-                    self.player.pos.x - round(self.player.pos.width * 1.5),
-                    self.player.pos.y - round(self.player.pos.height * 1.5),
-                    self.player.pos.width * 4,
-                    self.player.pos.height * 4),
-                    self.bullets[i].pos):
-                    if self.colliding[1] == False:
-                        self.colliding[1] = True
-                        self.score -= 2
-                if self.is_colliding(self.player.pos, self.bullets[i].pos):
-                    if self.colliding[2] == False:
-                        self.colliding[2] = True
-                        self.score -= 3
-                    self.untouched_count = 0
-            
-            if self.untouched_count == FPS * 0.2 + 1: self.score += 1
-
-            if BULLET_TYPE == BULLET_HONE:
-                self.frame_count += 1
-                if self.frame_count == FPS // NUM_BULLETS:
-                    self.frame_count = 0
-                    self.bullets.append(self.new_bullet(BULLET_HONE))
+        self.Action_Update(action)
 
         fitness = self.score - _score # difference in fitness is used
         # restore copies of changed variables
@@ -155,81 +120,91 @@ class Game:
         self.frame_count = _frame_count
         return fitness
 
-    def Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, pred=0): # extra paramters used when not TRAIN_MODEL
+    def Action_Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, pred=0): # action is FRAME_PER_ACTION frames of input
         for keys in action:
-            if not TRAIN_MODEL:
-                self.keys = keys
-                self.collides = []
+            self.Update(
+                keys,
+                l_2,
+                l_3,
+                l_4,
+                l_5,
+                pred
+            )
+    
+    def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, pred=0): # extra paramters used when not TRAIN_MODEL
+        if not TRAIN_MODEL:
+            self.keys = keys
+            self.collides = []
 
-            self.colliding = [False for i in range(len(self.colliding))]
-            if self.untouched_count < FPS * 0.2 + 1: self.untouched_count += 1
-                
-            self.player.Update(keys)
-            for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
-                self.bullets[i].Update()
-                if self.bullets[i].pos.x <= self.bullets[i].pos.width * -1 or \
-                    self.bullets[i].pos.x >= WIDTH or \
-                    self.bullets[i].pos.y <= self.bullets[i].pos.height * -1 or \
-                    self.bullets[i].pos.y >= HEIGHT:
-                        if BULLET_TYPE == BULLET_RANDOM:
-                            self.bullets[i] = self.new_bullet(BULLET_TYPE)
-                        elif BULLET_TYPE == BULLET_HONE:
-                            del self.bullets[i]
-                            continue
-
-            for i in range(len(self.bullets)):
-                if self.is_colliding(Rectangle(
-                    self.player.pos.x - round(self.player.pos.width * 4),
-                    self.player.pos.y - round(self.player.pos.height * 4),
-                    self.player.pos.width * 9,
-                    self.player.pos.height * 9),
-                    self.bullets[i].pos):
-                    if self.colliding[0] == False:
-                        self.colliding[0] = True
-                        self.score -= 1
-                    if not TRAIN_MODEL:
-                        self.collides.append(i);
-                        self.collide_count[0] += 1
-                if self.is_colliding(Rectangle(
-                    self.player.pos.x - round(self.player.pos.width * 1.5),
-                    self.player.pos.y - round(self.player.pos.height * 1.5),
-                    self.player.pos.width * 4,
-                    self.player.pos.height * 4),
-                    self.bullets[i].pos):
-                    if self.colliding[1] == False:
-                        self.colliding[1] = True
-                        self.score -= 2
-                    if not TRAIN_MODEL:
-                        self.collides.append(i);
-                        self.collide_count[1] += 1
-                if self.is_colliding(self.player.pos, self.bullets[i].pos):
-                    if self.colliding[2] == False:
-                        self.colliding[2] = True
-                        self.score -= 3
-                    self.untouched_count = 0 # reset "untouched" count (bullet hits player)
-                    if not TRAIN_MODEL:
-                        self.collides.append(i);
-                        self.collide_count[2] += 1
+        self.colliding = [False for i in range(len(self.colliding))]
+        if self.untouched_count < FPS * 2 + 1: self.untouched_count += 1
             
-            if self.untouched_count == FPS * 0.2 + 1: self.score += 1
+        self.player.Update(keys)
+        for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
+            self.bullets[i].Update()
+            if self.bullets[i].pos.x <= self.bullets[i].pos.width * -1 or \
+                self.bullets[i].pos.x >= WIDTH or \
+                self.bullets[i].pos.y <= self.bullets[i].pos.height * -1 or \
+                self.bullets[i].pos.y >= HEIGHT:
+                    if BULLET_TYPE == BULLET_RANDOM:
+                        self.bullets[i] = self.new_bullet(BULLET_TYPE)
+                    elif BULLET_TYPE == BULLET_HONE:
+                        del self.bullets[i]
+                        continue
 
-            if BULLET_TYPE == BULLET_HONE:
-                self.frame_count += 1
-                if self.frame_count == FPS // NUM_BULLETS:
-                    self.frame_count = 0
-                    self.bullets.append(self.new_bullet(BULLET_HONE))
+        for i in range(len(self.bullets)):
+            if self.is_colliding(Rectangle(
+                self.player.pos.x - round(self.player.pos.width * 4),
+                self.player.pos.y - round(self.player.pos.height * 4),
+                self.player.pos.width * 9,
+                self.player.pos.height * 9),
+                self.bullets[i].pos):
+                if self.colliding[0] == False:
+                    self.colliding[0] = True
+                    self.score -= 1
+                if not TRAIN_MODEL:
+                    self.collides.append(i);
+                    self.collide_count[0] += 1
+            if self.is_colliding(Rectangle(
+                self.player.pos.x - round(self.player.pos.width * 1.5),
+                self.player.pos.y - round(self.player.pos.height * 1.5),
+                self.player.pos.width * 4,
+                self.player.pos.height * 4),
+                self.bullets[i].pos):
+                if self.colliding[1] == False:
+                    self.colliding[1] = True
+                    self.score -= 2
+                if not TRAIN_MODEL:
+                    self.collides.append(i);
+                    self.collide_count[1] += 1
+            if self.is_colliding(self.player.pos, self.bullets[i].pos):
+                if self.colliding[2] == False:
+                    self.colliding[2] = True
+                    self.score -= 3
+                self.untouched_count = 0 # reset "untouched" count (bullet hits player)
+                if not TRAIN_MODEL:
+                    self.collides.append(i);
+                    self.collide_count[2] += 1
+        
+        if self.untouched_count == FPS * 2 + 1: self.score += 1
 
-            if not TRAIN_MODEL:
-                begin_drawing()
-                self.Draw(
-                    l_2,
-                    l_3,
-                    l_4,
-                    l_5,
-                    pred
-                )
-                draw_fps(8, 8)
-                end_drawing()
+        if BULLET_TYPE == BULLET_HONE:
+            self.frame_count += 1
+            if self.frame_count == FPS // NUM_BULLETS:
+                self.frame_count = 0
+                self.bullets.append(self.new_bullet(BULLET_HONE))
+
+        if not TRAIN_MODEL:
+            begin_drawing()
+            self.Draw(
+                l_2,
+                l_3,
+                l_4,
+                l_5,
+                pred
+            )
+            draw_fps(8, 8)
+            end_drawing()
 
     def Draw(self, l_2, l_3, l_4, l_5, pred):
         clear_background(BLACK)

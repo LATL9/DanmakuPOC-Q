@@ -6,7 +6,6 @@ from model import *
 from pyray import *
 import os
 import time
-import torch.multiprocessing as mp
 
 def train():
     return test(device, seed, model)
@@ -18,7 +17,7 @@ def test(device, seed, _model): # _ prevents naming conflict
 
 if __name__ == '__main__':
     device = torch.device("cpu")
-    torch.set_num_threads(1)
+    torch.set_num_threads(NUM_PROCESSES)
     model = nn.Sequential(
         nn.ConstantPad2d(4, 1),
         nn.Conv2d(2, 4, kernel_size=(9, 9)),
@@ -35,7 +34,7 @@ if __name__ == '__main__':
         nn.ReLU(),
         nn.Linear(32, 4 * FRAMES_PER_ACTION),
         nn.Sigmoid(),
-        nn.ReLU(),
+        nn.ReLU()
      ).to(device)
 
     # optimisation
