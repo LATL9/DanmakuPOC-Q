@@ -155,7 +155,7 @@ class Game:
             # converts int representation into one-hot vector as input
             if type(key) is int:
                 key = [1 if i == key else 0 for i in range(4)]
-            return self.Update(
+            self.Update(
                 key,
                 l_2,
                 l_3,
@@ -163,6 +163,8 @@ class Game:
                 l_5,
                 pred
             )
+
+        return self.score
     
     def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, pred=0): # extra paramters used when not TRAIN_MODEL
         if not TRAIN_MODEL:
