@@ -196,7 +196,7 @@ class Game:
                 self.bullets[i].pos):
                 if self.colliding[0] == False:
                     self.colliding[0] = True
-                    self.score -= 1
+                    self.score -= 4
                 if not TRAIN_MODEL:
                     self.collides.append(i);
                     self.collide_count[0] += 1
@@ -208,14 +208,14 @@ class Game:
                 self.bullets[i].pos):
                 if self.colliding[1] == False:
                     self.colliding[1] = True
-                    self.score -= 2
+                    self.score -= 16
                 if not TRAIN_MODEL:
                     self.collides.append(i);
                     self.collide_count[1] += 1
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 if self.colliding[2] == False:
                     self.colliding[2] = True
-                    self.score -= 3
+                    self.score -= 999999 # high penalty prevents q-learning agent from even considering touching a bullet
                 self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                 if not TRAIN_MODEL:
                     self.collides.append(i);
