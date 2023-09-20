@@ -18,6 +18,7 @@ class Game:
         self.rng = random.Random(seed)
         self.score = score
         self.colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
+        self.bullets = [] if bullets else [Bullet(*b) for b in bullets]
         if player:
             self.player = Player(*player)
         else:
@@ -28,44 +29,6 @@ class Game:
             self.untouched_count = untouched_count # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
             self.collides = [] # shows collisions (used for demonstration, not in training)
             self.collide_count = [] # no of frames each hitbox is touched
-
-        if bullets:
-            self.bullets = [Bullet(*b) for b in bullets]
-        else:
-            # edge barrier
-            self.bullets = []
-            self.bullets.append(Bullet(
-                0,
-                0,
-                WIDTH,
-                BULLET_SIZE,
-                0,
-                0
-            ))
-            self.bullets.append(Bullet(
-                0,
-                HEIGHT - BULLET_SIZE,
-                WIDTH,
-                BULLET_SIZE,
-                0,
-                0
-            ))
-            self.bullets.append(Bullet(
-                0,
-                BULLET_SIZE,
-                BULLET_SIZE,
-                HEIGHT - BULLET_SIZE * 2,
-                0,
-                0
-            ))
-            self.bullets.append(Bullet(
-                WIDTH - BULLET_SIZE,
-                BULLET_SIZE,
-                BULLET_SIZE,
-                HEIGHT - BULLET_SIZE * 2,
-                0,
-                0
-            ))
 
         if BULLET_TYPE == BULLET_HONE:
             if frame_count:
@@ -120,9 +83,7 @@ class Game:
         if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
         else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
 
-        # remove all but edge barrier
-        for i in range(4, len(self.bullets)):
-            del self.bullets[4]
+        self.bullets.clear()
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count = FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
