@@ -16,18 +16,18 @@ class Game:
         self.device = device
         self.seed = seed
         self.rng = random.Random(seed)
+        self.score = score
+        self.colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
         if player:
             self.player = Player(*player)
         else:
             if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
             else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
-        self.score = score
-        self.colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
-        self.untouched_count = untouched_count # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
 
         if not TRAIN_MODEL:
-            collides = [] # shows collisions (used for demonstration, not in training)
-            collide_count = [] # no of frames each hitbox is touched
+            self.untouched_count = untouched_count # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
+            self.collides = [] # shows collisions (used for demonstration, not in training)
+            self.collide_count = [] # no of frames each hitbox is touched
 
         if bullets:
             self.bullets = [Bullet(*b) for b in bullets]
@@ -84,7 +84,6 @@ class Game:
 
     def copy(self):
         g = Game(self.device, self.seed)
-        g.untouched_count = self.untouched_count
         g.player = self.player
         g.bullets = [self.bullets[i].copy() for i in range(len(self.bullets))]
         g.score = self.score
@@ -98,7 +97,6 @@ class Game:
         return (
             self.device,
             self.seed,
-            self.untouched_count,
             (
                 self.player.pos.x,
                 self.player.pos.y,
@@ -134,7 +132,6 @@ class Game:
 
     def Sim_Update(self, action): # simulates an update and returns change in fitnesss
         # create copies of changed variables in Update() to rollback once Sim_Update() finishes
-        _untouched_count = self.untouched_count
         _player = self.player.copy()
         _bullets = [self.bullets[i].copy() for i in range(len(self.bullets))]
         _score = self.score
@@ -143,7 +140,6 @@ class Game:
         fitness = self.Action_Update(action)
 
         # restore copies of changed variables
-        self.untouched_count = _untouched_count
         self.player = _player.copy()
         self.bullets = [_bullets[i].copy() for i in range(len(_bullets))]
         self.score = _score
@@ -170,9 +166,10 @@ class Game:
         if not TRAIN_MODEL:
             self.keys = keys
             self.collides = []
+            if self.untouched_count < FPS * 2 + 1:
+                self.untouched_count += 1
 
         self.colliding = [False for i in range(len(self.colliding))]
-        if self.untouched_count < FPS * 2 + 1: self.untouched_count += 1
             
         self.player.Update(keys)
         for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
@@ -216,12 +213,10 @@ class Game:
                 if self.colliding[2] == False:
                     self.colliding[2] = True
                     self.score -= 999999 # high penalty prevents q-learning agent from even considering touching a bullet
-                self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                 if not TRAIN_MODEL:
+                    self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                     self.collides.append(i);
                     self.collide_count[2] += 1
-        
-        if self.untouched_count == FPS * 2 + 1: self.score += 1
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
@@ -230,6 +225,9 @@ class Game:
                 self.bullets.append(self.new_bullet(BULLET_HONE))
 
         if not TRAIN_MODEL:
+            if self.untouched_count == FPS * 2 + 1:
+                self.score += 1
+
             begin_drawing()
             self.Draw(
                 l_2,
