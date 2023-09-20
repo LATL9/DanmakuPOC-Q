@@ -22,28 +22,18 @@ class Game:
         if player:
             self.player = Player(*player)
         else:
-            if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
-            else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
-
+            self.player = Player(WIDTH // 2, HEIGHT // 2 if BULLET_TYPE == BULLET_HONE else HEIGHT - 64 , PLAYER_SIZE)
         if not TRAIN_MODEL:
             self.untouched_count = untouched_count # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
             self.collides = [] # shows collisions (used for demonstration, not in training)
-            self.collide_count = [] # no of frames each hitbox is touched
+            self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
 
         if BULLET_TYPE == BULLET_HONE:
             if frame_count:
-                self.frame_count = frame_count
-            else:
-                self.frame_count = FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
+                self.frame_count = frame_count if BULLET_TYPE == BULLET_HONE else FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
         else:
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
-
-        if not TRAIN_MODEL:
-            if collide_count:
-                self.collide_count = collide_count
-            else:
-                self.collide_count = [0 for i in range(3)]
 
     def copy(self):
         g = Game(self.device, self.seed)
