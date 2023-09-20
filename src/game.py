@@ -97,7 +97,7 @@ class Game:
         self.frame_count = _frame_count
         return fitness
 
-    def Action_Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, pred=0, get_screen=False): # action is FRAME_PER_ACTION frames of input; get_screen if True will also return the screen before the last frame (used for expected inputs in Model)
+    def Action_Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, get_screen=False): # action is FRAME_PER_ACTION frames of input; get_screen if True will also return the screen before the last frame (used for expected inputs in Model)
         i = -1
         for key in action:
             i += 1
@@ -195,7 +195,7 @@ class Game:
 
         return self.score
 
-    def Draw(self, l_2, l_3, l_4, l_5, pred):
+    def Draw(self, l_2, l_3, l_4, l_5, l_6, l_7, pred):
         clear_background(BLACK)
         
         self.player.Draw()
@@ -211,26 +211,36 @@ class Game:
                 if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
 
         # layers
-#        for i in range(l_2.shape[0]):
-#            for y in range(l_2.shape[1]):
-#                for x in range(l_2.shape[2]):
-#                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
-#                    col = Color( c, c, c, 255 )
-#                    draw_rectangle(264 + (i // 2) * 128 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
-#        for i in range(l_3.shape[0]):
-#            for y in range(l_3.shape[1]):
-#                for x in range(l_3.shape[2]):
-#                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
-#                    col = Color( c, c, c, 255 )
-#                    draw_rectangle(528 + x * 4, i * 32 + y * 4, 4, 4, col)
-#        for y in range(l_4.shape[0]):
-#            col = Color( c, c, c, 255 )
-#            c = round(max(min(float(l_4[y]), 1), 0) * 255)
-#            draw_rectangle(568 + (y // 32) * 8, (y % 32) * 8, 8, 8, col)
-#        for y in range(l_5.shape[0]):
-#            col = Color( c, c, c, 255 )
-#            c = round(max(min(float(l_5[y]), 1), 0) * 255)
-#            draw_rectangle(608, y * 8, 8, 8, col)
+        for i in range(2):
+            for y in range(l_2.shape[1]):
+                for x in range(l_2.shape[2]):
+                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
+                    col = Color( c, c, c, 255 )
+                    draw_rectangle(264 + x * 4, (i % 2) * 128 + y * 4, 4, 4, col)
+        for i in range(2):
+            for y in range(l_3.shape[1]):
+                for x in range(l_3.shape[2]):
+                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
+                    col = Color( c, c, c, 255 )
+                    draw_rectangle(392 + x * 8, (i % 2) * 128 + y * 8, 8, 8, col)
+        for i in range(2):
+            for y in range(l_4.shape[1]):
+                for x in range(l_4.shape[2]):
+                    c = round(max(min(float(l_4[i, y, x]), 1), 0) * 255)
+                    col = Color( c, c, c, 255 )
+                    draw_rectangle(520 + x * 16, (i % 2) * 128 + y * 16, 16, 16, col)
+        for y in range(0, l_5.shape[0], 8):
+            col = Color( c, c, c, 255 )
+            c = round(max(min(float(l_5[y]), 1), 0) * 255)
+            draw_rectangle(648, y, 8, 1, col)
+        for y in range(0, l_6.shape[0], 2):
+            col = Color( c, c, c, 255 )
+            c = round(max(min(float(l_6[y]), 1), 0) * 255)
+            draw_rectangle(656, y, 8, 1, col)
+        for y in range(l_7.shape[0]):
+            col = Color( c, c, c, 255 )
+            c = round(max(min(float(l_7[y]), 1), 0) * 255)
+            draw_rectangle(664, y, 8, 2, col)
 
         draw_text(str(self.score), 8, 32, 32, WHITE)
 

@@ -127,6 +127,8 @@ class NNModel:
                     self.l_3,
                     self.l_4,
                     self.l_5,
+                    self.l_6,
+                    self.l_7,
                     self.pred
                 )
 
@@ -144,10 +146,12 @@ class NNModel:
 
         # l_x = xth layer in model
         self.l_2 = self.model[:4](x)
-        self.l_3 = self.model[4:8](self.l_2).flatten() # batch inputs aren't used (adds an extra dimension), so flatten() used instead
-        self.l_4 = self.model[9:11](self.l_3)
-        self.l_5 = self.model[11:13](self.l_4)
-        y = self.model[13:](self.l_5)
+        self.l_3 = self.model[4:8](self.l_2)
+        self.l_4 = self.model[8:12](self.l_3)
+        self.l_5 = self.model[13:15](self.l_4.flatten() if TRAIN_MODEL else self.l_4) # batch inputs aren't used (adds an extra dimension), so flatten() used instead
+        self.l_6 = self.model[15:17](self.l_5)
+        self.l_7 = self.model[17:19](self.l_6)
+        y = self.model[19:](self.l_7)
         self.pred = [float(f) for f in y]
 
         for i in range(FRAMES_PER_ACTION):

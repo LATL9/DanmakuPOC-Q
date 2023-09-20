@@ -19,23 +19,29 @@ if __name__ == '__main__':
     device = torch.device("cpu")
     torch.set_num_threads(NUM_PROCESSES)
     model = nn.Sequential(
-        nn.ConstantPad2d(4, 1),
-        nn.Conv2d(4, 8, kernel_size=(9, 9)),
+        nn.ConstantPad2d(7, 1),
+        nn.Conv2d(4, 16, kernel_size=(15, 15)),
         nn.ReLU(),
         nn.MaxPool2d((2, 2), stride=2),
-        nn.ConstantPad2d(2, 1),
-        nn.Conv2d(8, 8, kernel_size=(5, 5)),
+        nn.ConstantPad2d(3, 1),
+        nn.Conv2d(16, 64, kernel_size=(7, 7)),
+        nn.ReLU(),
+        nn.MaxPool2d((2, 2), stride=2),
+        nn.ConstantPad2d(1, 1),
+        nn.Conv2d(64, 256, kernel_size=(3, 3)),
         nn.ReLU(),
         nn.MaxPool2d((2, 2), stride=2),
         nn.Flatten(1, 3),
-        nn.Linear(512, 128),
+        nn.Linear(4096, 1024),
         nn.ReLU(),
-        nn.Linear(128, 32),
+        nn.Linear(1024, 256),
         nn.ReLU(),
-        nn.Linear(32, 4 * FRAMES_PER_ACTION),
+        nn.Linear(256, 64),
+        nn.ReLU(),
+        nn.Linear(64, 4 * FRAMES_PER_ACTION),
         nn.Sigmoid(),
         nn.ReLU()
-     ).to(device)
+    ).to(device)
 
     # optimisation
     criterion = nn.BCELoss()
