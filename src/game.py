@@ -12,13 +12,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Game:
-    def __init__(self, device, seed, untouched_count=0, player=False, bullets=False, score=0, frame_count=False, collide_count=False):
+    def __init__(self, device, seed, player=False, bullets=False, score=0, frame_count=False, collide_count=False):
         self.device = device
         self.seed = seed
         self.rng = random.Random(seed)
         self.score = score
         self.colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
-        self.bullets = [] if bullets else [Bullet(*b) for b in bullets]
+        self.bullets =  [Bullet(*b) for b in bullets] if bullets else []
         if player:
             self.player = Player(*player)
         else:
@@ -28,10 +28,10 @@ class Game:
             self.collides = [] # shows collisions (used for demonstration, not in training)
             self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
 
-        if BULLET_TYPE == BULLET_HONE:
-            if frame_count:
-                self.frame_count = frame_count if BULLET_TYPE == BULLET_HONE else FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
+        if frame_count:
+            self.frame_count = frame_count if BULLET_TYPE == BULLET_HONE else FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
         else:
+            self.frame_count = 0
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
 
@@ -97,8 +97,12 @@ class Game:
         self.frame_count = _frame_count
         return fitness
 
-    def Action_Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, pred=0): # action is FRAME_PER_ACTION frames of input
+    def Action_Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, pred=0, get_screen=False): # action is FRAME_PER_ACTION frames of input; get_screen if True will also return the screen before the last frame (used for expected inputs in Model)
+        i = -1
         for key in action:
+            i += 1
+            if get_screen and i == len(action) - 1:
+                last_screen = self.get_screen() # used for past context
             # converts int representation into one-hot vector as input
             if type(key) is int:
                 key = [1 if i == key else 0 for i in range(4)]
@@ -110,8 +114,7 @@ class Game:
                 l_5,
                 pred
             )
-
-        return self.score
+        return last_screen if get_screen else self.score
     
     def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, pred=0): # extra paramters used when not TRAIN_MODEL
         if not TRAIN_MODEL:

@@ -20,11 +20,11 @@ if __name__ == '__main__':
     torch.set_num_threads(NUM_PROCESSES)
     model = nn.Sequential(
         nn.ConstantPad2d(4, 1),
-        nn.Conv2d(2, 4, kernel_size=(9, 9)),
+        nn.Conv2d(4, 8, kernel_size=(9, 9)),
         nn.ReLU(),
         nn.MaxPool2d((2, 2), stride=2),
         nn.ConstantPad2d(2, 1),
-        nn.Conv2d(4, 8, kernel_size=(5, 5)),
+        nn.Conv2d(8, 8, kernel_size=(5, 5)),
         nn.ReLU(),
         nn.MaxPool2d((2, 2), stride=2),
         nn.Flatten(1, 3),

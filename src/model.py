@@ -83,7 +83,7 @@ class NNModel:
 
         self.game_dict = manager.dict()
         self.q_table_dict = manager.dict()
-        jobs = list()
+        jobs = []
         for i in range(NUM_PROCESSES):
             index = i * pow(4, FRAMES_PER_ACTION) // NUM_PROCESSES
             jobs.append(mp.Process(target=calc_q_value, args=(
@@ -96,10 +96,11 @@ class NNModel:
         for i in range(NUM_PROCESSES):
             jobs[i].start()
 
+        last_screen = self.g.get_screen()
         for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
             screen = self.g.get_screen()
             if TRAIN_MODEL:
-                exp_inps.append(screen)
+                exp_inps.append(torch.cat((last_screen, screen), 0))
                 exp_outs.append(torch.zeros(FRAMES_PER_ACTION, 4).to(self.device))
 
                 self.game_dict[f] = self.g.export() # processes will start once next instance of Game() is available
@@ -117,7 +118,7 @@ class NNModel:
                     print(arrows[exp_outs_dec[i]], end='')
                 print(", Q-value {}".format(max_q_value), end='\r')
 
-                self.g.Action_Update(exp_outs[-1])
+                last_screen = self.g.Action_Update(exp_outs[-1], get_screen=True)
                 exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
             else:
                 self.g.Action_Update(
