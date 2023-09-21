@@ -72,8 +72,8 @@ if __name__ == '__main__':
 
         if TRAIN_MODEL:
             seed = int(time.time()) # random seed
-            error = 0.0
 
+        error = 0.0
         results = train()
         fitness = results['fitness']
 

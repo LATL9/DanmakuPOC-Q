@@ -63,6 +63,9 @@ class NNModel:
 
 
     def train(self):
+        exp_inps = [] # expected tensor inputs (get_screen())
+        exp_outs = [] # expected tensor outputs (actions)
+
         if TRAIN_MODEL:
             jobs = []
             manager = mp.Manager()
@@ -72,29 +75,26 @@ class NNModel:
                 2: '←',
                 3: '→'
             }
-
-            exp_inps = [] # expected tensor inputs (get_screen())
-            exp_outs = [] # expected tensor outputs (actions)
             q_table = [] # stores q-values for actions at the actual state
             max_q_value = -9e99 # stores max q-value for actions from state'
+
+            self.game_dict = manager.dict()
+            self.q_table_dict = manager.dict()
+            jobs = []
+            for i in range(NUM_PROCESSES):
+                index = i * pow(4, FRAMES_PER_ACTION) // NUM_PROCESSES
+                jobs.append(mp.Process(target=calc_q_value, args=(
+                    self.game_dict,
+                    self.q_table_dict,
+                    index,
+                    self.to_base4(index),
+                    self.to_base4((i + 1) * pow(4, FRAMES_PER_ACTION) // NUM_PROCESSES),
+                )))
+            for i in range(NUM_PROCESSES):
+                jobs[i].start()
         else: # test model to show to user
             init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
             set_target_fps(FPS)
-
-        self.game_dict = manager.dict()
-        self.q_table_dict = manager.dict()
-        jobs = []
-        for i in range(NUM_PROCESSES):
-            index = i * pow(4, FRAMES_PER_ACTION) // NUM_PROCESSES
-            jobs.append(mp.Process(target=calc_q_value, args=(
-                self.game_dict,
-                self.q_table_dict,
-                index,
-                self.to_base4(index),
-                self.to_base4((i + 1) * pow(4, FRAMES_PER_ACTION) // NUM_PROCESSES),
-            )))
-        for i in range(NUM_PROCESSES):
-            jobs[i].start()
 
         last_screen = self.g.get_screen()
         for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
@@ -106,6 +106,8 @@ class NNModel:
                 self.game_dict[f] = self.g.export() # processes will start once next instance of Game() is available
                 while len(self.q_table_dict) != pow(4, FRAMES_PER_ACTION):
                     pass # wait until all processes are "complete" (are waiting for next frame)
+                for i in range(NUM_PROCESSES):
+                    jobs[i].join()
                 q_table.append(list({k: v for k, v in sorted(self.q_table_dict.items(), key=lambda item: item[0])}.values()))
                 for i in range(pow(4, FRAMES_PER_ACTION)):
                     del self.q_table_dict[i]
@@ -119,14 +121,14 @@ class NNModel:
                 print(", Q-value {}".format(max_q_value), end='\r')
 
                 last_screen = self.g.Action_Update(exp_outs[-1], get_screen=True)
-                if f < round(FPS * 4 / FRAMES_PER_ACTION):
+                if f < round(FPS * 0 / FRAMES_PER_ACTION):
                     del exp_inps[-1]
                     del exp_outs[-1]
                 else:
                     exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
             else:
                 self.g.Action_Update(
-                    self.test(screen),
+                    self.test(torch.cat((last_screen, screen), 0)),
                     self.l_2,
                     self.l_3,
                     self.l_4,
@@ -135,9 +137,7 @@ class NNModel:
                     self.l_7,
                     self.pred
                 )
-
-        for i in range(NUM_PROCESSES):
-            jobs[i].join()
+                last_screen = screen.detach().clone()
 
         return {
             'fitness': self.g.score,
@@ -152,7 +152,10 @@ class NNModel:
         self.l_2 = self.model[:4](x)
         self.l_3 = self.model[4:8](self.l_2)
         self.l_4 = self.model[8:12](self.l_3)
-        self.l_5 = self.model[13:15](self.l_4.flatten() if TRAIN_MODEL else self.l_4) # batch inputs aren't used (adds an extra dimension), so flatten() used instead
+        if TRAIN_MODEL:
+            self.l_5 = self.model[12:15](self.l_4)
+        else:
+            self.l_5 = self.model[13:15](self.l_4.flatten()) # batch inputs aren't used (adds an extra dimension), so flatten() used instead
         self.l_6 = self.model[15:17](self.l_5)
         self.l_7 = self.model[17:19](self.l_6)
         y = self.model[19:](self.l_7)

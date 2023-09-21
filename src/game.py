@@ -24,7 +24,7 @@ class Game:
         else:
             self.player = Player(WIDTH // 2, HEIGHT // 2 if BULLET_TYPE == BULLET_HONE else HEIGHT - 64 , PLAYER_SIZE)
         if not TRAIN_MODEL:
-            self.untouched_count = untouched_count # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
+            self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
             self.collides = [] # shows collisions (used for demonstration, not in training)
             self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
 
@@ -112,11 +112,13 @@ class Game:
                 l_3,
                 l_4,
                 l_5,
+                l_6,
+                l_7,
                 pred
             )
         return last_screen if get_screen else self.score
     
-    def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, pred=0): # extra paramters used when not TRAIN_MODEL
+    def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0): # extra paramters used when not TRAIN_MODEL
         if not TRAIN_MODEL:
             self.keys = keys
             self.collides = []
@@ -188,6 +190,8 @@ class Game:
                 l_3,
                 l_4,
                 l_5,
+                l_6,
+                l_7,
                 pred
             )
             draw_fps(8, 8)
@@ -342,7 +346,7 @@ class Game:
         # creates 2D tensor (32x32) indicating location of bullets
         # first dimension indicates bullets (0 = no bullet, 1 = bullet)
         # second dimension indicates free space (opposite of first dimension)
-        # a third of the dimensions of the screen around the player is used (therefore two thirds of the screen is used)
+        # a third of the dimensions of the screen around the player is used (therefore two thirds (x and y) of the screen is used)
         # centre (top-left corner of (16, 16)) is player
         s = torch.zeros(2, 32, 32).to(self.device)
         s[1] = torch.ones(32, 32).to(self.device)
@@ -362,7 +366,7 @@ class Game:
                 s[1][y][x] = 0
 
         # barrier (previous for loop for bullets only draws one pixel, while barrier uses many pixels)
-        # -1 is used in if as barrier is drawn to the side of l_x, r_x, l_y, and r_y, not at that location
+        # -1 is used as barrier is drawn to the side of l_x, r_x, l_y, and r_y, not at that location
         if BULLET_SIZE - 1 - p_x >= WIDTH / -3 and BULLET_SIZE - 1 - p_x < WIDTH / 3:
             l_x = math.floor((((BULLET_SIZE - p_x) / (WIDTH / 3)) + 1) * 16)
             for x in range(l_x):
