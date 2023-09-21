@@ -119,7 +119,11 @@ class NNModel:
                 print(", Q-value {}".format(max_q_value), end='\r')
 
                 last_screen = self.g.Action_Update(exp_outs[-1], get_screen=True)
-                exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
+                if f < round(FPS * 4 / FRAMES_PER_ACTION):
+                    del exp_inps[-1]
+                    del exp_outs[-1]
+                else:
+                    exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
             else:
                 self.g.Action_Update(
                     self.test(screen),

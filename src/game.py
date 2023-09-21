@@ -350,7 +350,7 @@ class Game:
         p_y = self.player.pos.y + self.player.pos.height / 2
         
         # first dimension
-        for i in range(4, len(self.bullets)):
+        for i in range(len(self.bullets)):
             # for bullets as well
             b_x = self.bullets[i].pos.x + self.bullets[i].pos.width / 2
             b_y = self.bullets[i].pos.y + self.bullets[i].pos.height / 2

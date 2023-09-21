@@ -10,8 +10,7 @@ PLAYER_SIZE = 8
 
 NUM_BULLETS = 2
 NUM_PROCESSES = mp.cpu_count()
-NUM_MODELS_PER_PROCESS = round(NUM_MODELS / NUM_PROCESSES)
-TRAIN_TIME = 32 # seconds
+TRAIN_TIME = 64 # seconds
 
 BULLET_RANDOM = 0
 BULLET_HONE = 1 # NUM_BULLETS represents number of bullets fired per second when BULLET_HONE is used

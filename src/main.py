@@ -50,9 +50,8 @@ if __name__ == '__main__':
     try:
         checkpoint = torch.load("models/model.pt", map_location=device)
         epoch = checkpoint['epoch']
-        for i in range(NUM_MODELS):
-            model.load_state_dict(checkpoint['model_state_dict'.format(i)])
-            model.to(device)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.to(device)
 
         if not TRAIN_MODEL:
             rankings_r = open("rankings.csv", 'r').readlines()
