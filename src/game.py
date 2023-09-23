@@ -342,7 +342,7 @@ class Game:
             (r1.y > r2.y and r2.y + r2.height > r1.y)): return True
         return False
 
-    def get_screen(self):
+    def get_screen(self, bullet=False): # if bullet, also return whether or not a bullet is in screen (discard from training dataset if none)
         # creates 2D tensor (32x32) indicating location of bullets
         # first dimension indicates bullets (0 = no bullet, 1 = bullet)
         # second dimension indicates free space (opposite of first dimension)
@@ -352,6 +352,8 @@ class Game:
         s[1] = torch.ones(32, 32).to(self.device)
         p_x = self.player.pos.x + self.player.pos.width / 2
         p_y = self.player.pos.y + self.player.pos.height / 2
+        if bullet:
+            bullet_on_screen = False
         
         # first dimension
         for i in range(len(self.bullets)):
@@ -364,6 +366,8 @@ class Game:
                 y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
                 s[0][y][x] = 1
                 s[1][y][x] = 0
+                if bullet:
+                    bullet_on_screen = True
 
         # barrier (previous for loop for bullets only draws one pixel, while barrier uses many pixels)
         # -1 is used as barrier is drawn to the side of l_x, r_x, l_y, and r_y, not at that location
@@ -390,4 +394,4 @@ class Game:
                 s[0][y] = torch.ones(1, 32)
                 s[1][y] = torch.zeros(1, 32)
 
-        return s
+        return (bullet_on_screen, s) if bullet else s

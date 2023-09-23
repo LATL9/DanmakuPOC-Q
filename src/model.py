@@ -98,7 +98,7 @@ class NNModel:
 
         last_screen = self.g.get_screen()
         for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
-            screen = self.g.get_screen()
+            bullet_on_screen, screen = self.g.get_screen(True)
             if TRAIN_MODEL:
                 exp_inps.append(torch.cat((last_screen, screen), 0))
                 exp_outs.append(torch.zeros(FRAMES_PER_ACTION, 4).to(self.device))
@@ -106,8 +106,6 @@ class NNModel:
                 self.game_dict[f] = self.g.export() # processes will start once next instance of Game() is available
                 while len(self.q_table_dict) != pow(4, FRAMES_PER_ACTION):
                     pass # wait until all processes are "complete" (are waiting for next frame)
-                for i in range(NUM_PROCESSES):
-                    jobs[i].join()
                 q_table.append(list({k: v for k, v in sorted(self.q_table_dict.items(), key=lambda item: item[0])}.values()))
                 for i in range(pow(4, FRAMES_PER_ACTION)):
                     del self.q_table_dict[i]
@@ -121,7 +119,7 @@ class NNModel:
                 print(", Q-value {}".format(max_q_value), end='\r')
 
                 last_screen = self.g.Action_Update(exp_outs[-1], get_screen=True)
-                if f < round(FPS * 0 / FRAMES_PER_ACTION):
+                if not bullet_on_screen:
                     del exp_inps[-1]
                     del exp_outs[-1]
                 else:

@@ -1,6 +1,6 @@
 import torch.multiprocessing as mp
 
-TRAIN_MODEL = False # true = train, false = test
+TRAIN_MODEL = True # true = train, false = test
 WIDTH = 800
 HEIGHT = 800
 FPS = 10
@@ -13,7 +13,7 @@ NUM_PROCESSES = mp.cpu_count()
 TRAIN_TIME = 1 # seconds
 
 BULLET_RANDOM = 0
-BULLET_HONE = 1 # NUM_BULLETS represents number of bullets fired per second when BULLET_HONE is used
+BULLET_HONE = 64 # NUM_BULLETS represents number of bullets fired per second when BULLET_HONE is used
 BULLET_HONE_SPEED = HEIGHT / (FPS * 3) # will be on screen for at most 3 secs
 BULLET_TYPE = BULLET_HONE # current type
 
