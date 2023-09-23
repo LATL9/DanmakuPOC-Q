@@ -1,6 +1,6 @@
 .etc/
 .vscode/
-models/models*
+models/model*
 src/__pycache__/*
 build.sh
 DanmakuPRC-debug

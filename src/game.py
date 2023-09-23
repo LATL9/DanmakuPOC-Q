@@ -343,13 +343,10 @@ class Game:
         return False
 
     def get_screen(self, bullet=False): # if bullet, also return whether or not a bullet is in screen (discard from training dataset if none)
-        # creates 2D tensor (32x32) indicating location of bullets
-        # first dimension indicates bullets (0 = no bullet, 1 = bullet)
-        # second dimension indicates free space (opposite of first dimension)
+        # creates 2D tensor (32x32) indicating location of bullets (0 = no bullet, 1 = bullet)
         # a third of the dimensions of the screen around the player is used (therefore two thirds (x and y) of the screen is used)
         # centre (top-left corner of (16, 16)) is player
-        s = torch.zeros(2, 32, 32).to(self.device)
-        s[1] = torch.ones(32, 32).to(self.device)
+        s = torch.zeros(1, 32, 32).to(self.device)
         p_x = self.player.pos.x + self.player.pos.width / 2
         p_y = self.player.pos.y + self.player.pos.height / 2
         if bullet:
@@ -365,7 +362,6 @@ class Game:
                 x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
                 y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
                 s[0][y][x] = 1
-                s[1][y][x] = 0
                 if bullet:
                     bullet_on_screen = True
 
@@ -376,22 +372,18 @@ class Game:
             for x in range(l_x):
                 for y in range(32):
                     s[0][y][x] = 1
-                    s[1][y][x] = 0
         if WIDTH - 1 - p_x >= WIDTH / -3 and WIDTH - 1 - p_x < WIDTH / 3:
             r_x = math.floor((((WIDTH - BULLET_SIZE - p_x) / (WIDTH / 3)) + 1) * 16)
             for x in range(r_x, 32):
                 for y in range(32):
                     s[0][y][x] = 1
-                    s[1][y][x] = 0
         if BULLET_SIZE - 1 - p_y >= HEIGHT / -3 and BULLET_SIZE - 1 - p_y < HEIGHT / 3:
             l_y = math.floor((((BULLET_SIZE - p_y) / (HEIGHT / 3)) + 1) * 16)
             for y in range(l_y):
                 s[0][y] = torch.ones(1, 32)
-                s[1][y] = torch.zeros(1, 32)
         if HEIGHT - 1 - p_y >= HEIGHT / -3 and HEIGHT - 1 - p_y < HEIGHT / 3:
             r_y = math.floor((((HEIGHT - BULLET_SIZE - p_y) / (HEIGHT / 3)) + 1) * 16)
             for y in range(r_y, 32):
                 s[0][y] = torch.ones(1, 32)
-                s[1][y] = torch.zeros(1, 32)
 
         return (bullet_on_screen, s) if bullet else s
