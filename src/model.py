@@ -137,7 +137,7 @@ class NNModel:
                 last_screen = screen.detach().clone()
 
         return {
-            'fitness': self.validate(), # score by model
+            'fitness': self.validate() if TRAIN_MODEL else self.g.score, # score by model
             'q_fitness': self.g.score, # score by Q-learning agent
             'exp_inps': exp_inps,
             'exp_outs': exp_outs
@@ -152,17 +152,14 @@ class NNModel:
             last_screen = screen.detach().clone()
         return self.g.score
 
-    def test(self, x):
+    def test(self, x, batches=False):
         model_action = torch.zeros(FRAMES_PER_ACTION, 4).to(self.device)
 
         # l_x = xth layer in model
         self.l_2 = self.model[:4](x)
         self.l_3 = self.model[4:8](self.l_2)
         self.l_4 = self.model[8:12](self.l_3)
-        if TRAIN_MODEL:
-            self.l_5 = self.model[12:15](self.l_4)
-        else:
-            self.l_5 = self.model[13:15](self.l_4.flatten()) # batch inputs aren't used (adds an extra dimension), so flatten() used instead
+        self.l_5 = self.model[13:15](self.l_4.flatten())
         self.l_6 = self.model[15:17](self.l_5)
         self.l_7 = self.model[17:19](self.l_6)
         y = self.model[19:](self.l_7)

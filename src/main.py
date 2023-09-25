@@ -75,9 +75,8 @@ if __name__ == '__main__':
         fitness = results['fitness']
 
         if not TRAIN_MODEL:
-            print("Epoch {}: Fitness = {}, Q-Learning Fitness = {}, Error = {}".format(
+            print("Epoch {}: Fitness = {}, Error = {}".format(
                 epoch,
-                results['q_fitness'],
                 fitness,
                 error
             ))
@@ -117,7 +116,9 @@ if __name__ == '__main__':
             torch.save(checkpoint, "models/model-{}.pt".format(epoch))
             os.system("cp models/model-{}.pt models/model.pt".format(epoch)) # model.pt = most recent
 
-        print("Epoch {}: Error = {}".format(
+        print("Epoch {}: Fitness = {}, Q-Learning Fitness = {}, Error = {}".format(
             epoch,
+            fitness,
+            results['q_fitness'],
             error
         ))
