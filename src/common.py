@@ -13,7 +13,7 @@ NUM_PROCESSES = mp.cpu_count()
 TRAIN_TIME = 10 # seconds
 
 BULLET_RANDOM = 0
-BULLET_HONE = 64 # NUM_BULLETS represents number of bullets fired per second when BULLET_HONE is used
+BULLET_HONE = 1 # NUM_BULLETS represents number of bullets fired per second when BULLET_HONE is used
 BULLET_HONE_SPEED = HEIGHT / (FPS * 3) # will be on screen for at most 3 secs
 BULLET_TYPE = BULLET_HONE # current type
 
