@@ -136,9 +136,10 @@ class NNModel:
                 )
                 last_screen = screen.detach().clone()
 
+        q_fitness = self.g.score
         return {
             'fitness': self.validate() if TRAIN_MODEL else self.g.score, # score by model
-            'q_fitness': self.g.score, # score by Q-learning agent
+            'q_fitness': q_fitness, # score by Q-learning agent
             'exp_inps': exp_inps,
             'exp_outs': exp_outs
         }
