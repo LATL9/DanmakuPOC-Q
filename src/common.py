@@ -1,7 +1,6 @@
 import torch.multiprocessing as mp
 
 TRAIN_MODEL = False # true = train, false = test
-VALIDATE = False # true = validate, false = don't validate
 WIDTH = 800
 HEIGHT = 800
 FPS = 10
