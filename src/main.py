@@ -63,7 +63,7 @@ if __name__ == '__main__':
     except FileNotFoundError:
         epoch = 0
         log = open("log.csv", 'w')
-        log.write("Time, Epoch, Error\n") # header
+        log.write("Time, Epoch, Fitness, Error\n") # header
         rankings = open("rankings.csv", 'w')
         rankings.write("Epoch, Seed\n") # header
 
@@ -71,15 +71,17 @@ if __name__ == '__main__':
         epoch += 1
 
         if TRAIN_MODEL:
-            seed = int(time.time()) # random seed
+            seed = int(time.time())
 
         error = 0.0
         results = train()
         fitness = results['fitness']
 
         if not TRAIN_MODEL:
-            print("Epoch {}: Error = {}".format(
+            print("Epoch {}: Fitness = {}, Q-Learning Fitness = {}, Error = {}".format(
                 epoch,
+                results['q_fitness'],
+                fitness,
                 error
             ))
             exit() # if testing, exit now

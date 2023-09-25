@@ -61,7 +61,6 @@ class NNModel:
             if num == 0:
                 return l
 
-
     def train(self):
         exp_inps = [] # expected tensor inputs (get_screen())
         exp_outs = [] # expected tensor outputs (actions)
@@ -138,11 +137,20 @@ class NNModel:
                 last_screen = screen.detach().clone()
 
         return {
-            'fitness': self.g.score,
+            'fitness': self.validate(), # score by model
+            'q_fitness': self.g.score, # score by Q-learning agent
             'exp_inps': exp_inps,
             'exp_outs': exp_outs
         }
-        
+
+    def validate(self): # should be run if TRAIN_MODEL
+        last_screen = self.g.get_screen()
+        for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
+            screen = self.g.get_screen()
+            self.g.Action_Update(self.test(torch.cat((last_screen, screen), 0)))
+            last_screen = screen.detach().clone()
+        return self.g.score
+
     def test(self, x):
         model_action = torch.zeros(FRAMES_PER_ACTION, 4).to(self.device)
 
