@@ -148,7 +148,7 @@ class NNModel:
         last_screen = self.g.get_screen()
         for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
             screen = self.g.get_screen()
-            self.g.Action_Update(self.test(torch.cat((last_screen, screen), 0)))
+            self.g.Action_Update(self.test(torch.cat((last_screen, screen), 0)), validate=True)
             last_screen = screen.detach().clone()
         return self.g.score
 

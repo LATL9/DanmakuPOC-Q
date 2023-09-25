@@ -97,7 +97,7 @@ class Game:
         self.frame_count = _frame_count
         return fitness
 
-    def Action_Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, get_screen=False): # action is FRAME_PER_ACTION frames of input; get_screen if True will also return the screen before the last frame (used for expected inputs in Model)
+    def Action_Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, get_screen=False, validate=False): # action is FRAME_PER_ACTION frames of input; get_screen if True will also return the screen before the last frame (used for expected inputs in Model)
         i = -1
         for key in action:
             i += 1
@@ -114,11 +114,12 @@ class Game:
                 l_5,
                 l_6,
                 l_7,
-                pred
+                pred,
+                validate=validate
             )
         return last_screen if get_screen else self.score
     
-    def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0): # extra paramters used when not TRAIN_MODEL
+    def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, validate=False): # extra paramters used when not TRAIN_MODEL
         if not TRAIN_MODEL:
             self.keys = keys
             self.collides = []
@@ -174,7 +175,7 @@ class Game:
                     self.collides.append(i);
                     self.collide_count[2] += 1
                 else:
-                    self.score -= 999999 # high penalty prevents q-learning agent from even considering touching a bullet
+                    self.score -= 64 if validate else 999999 # high penalty prevents q-learning agent from even considering touching a bullet
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
