@@ -56,7 +56,6 @@ if __name__ == '__main__':
         if not TRAIN_MODEL:
             log_r = open("log.csv", 'r').readlines()
             seed = int(log_r[len(log_r) - 1].split(', ')[1])
-            log_r.close()
         print("Restarting from checkpoint at epoch {}.".format(epoch))
         log = open("log.csv", 'a')
 
