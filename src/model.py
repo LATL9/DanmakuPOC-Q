@@ -48,7 +48,6 @@ class NNModel:
         self.rng = random.Random(seed)
         self.model = model
         self.seed = seed
-        self.g = Game(self.device, self.seed)
 
     def reset(self, seed):
         self.g.Reset(seed)
@@ -62,6 +61,7 @@ class NNModel:
                 return l
 
     def train(self):
+        self.g = Game(self.device, self.seed)
         exp_inps = [] # expected tensor inputs (get_screen())
         exp_outs = [] # expected tensor outputs (actions)
 
@@ -144,6 +144,7 @@ class NNModel:
         }
 
     def validate(self): # should be run if TRAIN_MODEL
+        self.g = Game(self.device, self.seed)
         last_screen = self.g.get_screen()
         for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
             screen = self.g.get_screen()
