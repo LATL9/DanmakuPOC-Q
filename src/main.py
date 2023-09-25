@@ -54,18 +54,16 @@ if __name__ == '__main__':
         model.to(device)
 
         if not TRAIN_MODEL:
-            rankings_r = open("rankings.csv", 'r').readlines()
-            seed = float(rankings_r[len(rankings_r) - 1].split(', ')[1])
+            log_r = open("log.csv", 'r').readlines()
+            seed = int(log_r[len(log_r) - 1].split(', ')[1])
+            log_r.close()
         print("Restarting from checkpoint at epoch {}.".format(epoch))
         log = open("log.csv", 'a')
-        rankings = open("rankings.csv", 'a')
 
     except FileNotFoundError:
         epoch = 0
         log = open("log.csv", 'w')
-        log.write("Time, Epoch, Fitness, Error\n") # header
-        rankings = open("rankings.csv", 'w')
-        rankings.write("Epoch, Seed\n") # header
+        log.write("Time, Seed, Epoch, Fitness, Error\n") # header
 
     while True:
         epoch += 1
@@ -107,17 +105,12 @@ if __name__ == '__main__':
 
         log.write("{}, {}, {}, {}\n".format(
             time.asctime(),
+            seed, # used for replays
             epoch,
             fitness,
             error 
         ))
         log.flush()
-        # 1st column is epoch, 2nd column is seed (for replays)
-        rankings.write("{}, {}\n".format(
-            epoch,
-            seed
-        ))
-        rankings.flush()
 
         if True:
             checkpoint = {'epoch': epoch}
