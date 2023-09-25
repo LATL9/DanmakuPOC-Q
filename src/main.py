@@ -101,7 +101,7 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
 
-        log.write("{}, {}, {}, {}\n".format(
+        log.write("{}, {}, {}, {}, {}\n".format(
             time.asctime(),
             seed, # used for replays
             epoch,
