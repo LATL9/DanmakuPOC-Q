@@ -211,11 +211,11 @@ class Game:
 
         # minimap
         s = self.get_screen()
-        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 192 ))
-        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 192 ))
+        draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 128 ))
+        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 128 ))
         for y in range(32):
             for x in range(32):
-                if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 192 ))
+                if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 128 ))
 
         # layers
 #        for i in range(l_2.shape[0]):

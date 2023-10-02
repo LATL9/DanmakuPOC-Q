@@ -7,6 +7,11 @@ from pyray import *
 import os
 import time
 
+#from torch.utils.tensorboard import SummaryWriter
+
+# Create a summary writer
+#writer = SummaryWriter()
+
 def train():
     return test(device, seed, model)
 
@@ -21,23 +26,23 @@ if __name__ == '__main__':
     model = nn.Sequential(
         nn.ConstantPad2d(7, 1),
         nn.Conv2d(2, 16, kernel_size=(15, 15)),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.MaxPool2d((2, 2), stride=2),
         nn.ConstantPad2d(3, 1),
         nn.Conv2d(16, 64, kernel_size=(7, 7)),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.MaxPool2d((2, 2), stride=2),
         nn.ConstantPad2d(1, 1),
         nn.Conv2d(64, 256, kernel_size=(3, 3)),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.MaxPool2d((2, 2), stride=2),
         nn.Flatten(1, 3),
         nn.Linear(4096, 1024),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Linear(1024, 256),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Linear(256, 64),
-        nn.ReLU(),
+        nn.LeakyReLU(),
         nn.Linear(64, 4 * FRAMES_PER_ACTION),
         nn.Sigmoid(),
         nn.ReLU()
@@ -99,6 +104,10 @@ if __name__ == '__main__':
             loss = criterion(y, targets)
             error += float(loss)
             loss.backward()
+
+            #for name, param in model.named_parameters():
+            #    writer.add_histogram(name + '/grad', param.grad, global_step=epoch)
+
             optimizer.step()
 
         log.write("{}, {}, {}, {}, {}\n".format(

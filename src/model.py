@@ -125,7 +125,7 @@ class NNModel:
                     exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
             else:
                 self.g.Action_Update(
-                    self.test(torch.cat((last_screen, screen), 0)),
+                    self.test(torch.cat((last_screen, screen), 0), bullet_on_screen),
                     self.l_2,
                     self.l_3,
                     self.l_4,
@@ -167,12 +167,18 @@ class NNModel:
         self.pred = [float(f) for f in y]
 
         for i in range(FRAMES_PER_ACTION):
+            m = -1
+            m_elem = 0
             for j in range(4):
-                if self.pred[i * 4 + j] > 0: model_action[i][j] = 1
+                #if self.pred[i * 4 + j] > 0: model_action[i][j] = 1
+                if self.pred[i * 4 + j] > m:
+                    m = self.pred[i * 4 + j]
+                    m_elem = j
+            model_action[i][m_elem] = 1
             # prevents model from pressing opposite action (wouldn't move either direction)
-            for j in range(0, len(model_action), 2):
-                if model_action[i][j] == 1 and model_action[i][j + 1] == 1:
-                    if self.pred[i * 4 + j] > self.pred[i * 4 + j + 1]: model_action[i][j + 1] = 0
-                    else: model_action[i][j] = 0
+            #for j in range(0, len(model_action), 2):
+            #    if model_action[i][j] == 1 and model_action[i][j + 1] == 1:
+            #        if self.pred[i * 4 + j] > self.pred[i * 4 + j + 1]: model_action[i][j + 1] = 0
+            #        else: model_action[i][j] = 0
 
         return model_action
