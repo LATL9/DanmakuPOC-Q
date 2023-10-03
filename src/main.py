@@ -97,6 +97,7 @@ if __name__ == '__main__':
             shuffle=True,
             num_workers=1
         )
+        torch.save(training_loader, "training_loaders/training_loader-{}.pt".format(epoch))
 
         for i, (inputs, targets) in enumerate(training_loader):
             optimizer.zero_grad()

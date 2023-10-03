@@ -2,6 +2,7 @@
 .vscode/
 models/model*
 src/__pycache__/*
+training_loaders/training_loader*
 build.sh
 DanmakuPRC-debug
 DanmakuPRC-release

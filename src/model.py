@@ -2,8 +2,6 @@ from common import *
 
 from game import *
 
-import os
-
 def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in decimal; end of range of actions is exclusive
     for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
         while f == len(game_dict): pass # wait until current frame is ready
@@ -43,7 +41,7 @@ def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in
                     break
 
 class NNModel:
-    def __init__(self, device, seed, model):
+    def __init__(self, device, seed, model=-1):
         self.device = device
         self.rng = random.Random(seed)
         self.model = model
@@ -64,8 +62,9 @@ class NNModel:
         self.g = Game(self.device, self.seed)
         exp_inps = [] # expected tensor inputs (get_screen())
         exp_outs = [] # expected tensor outputs (actions)
+        results = {}
 
-        if TRAIN_MODEL:
+        if BUILD_DL:
             jobs = []
             manager = mp.Manager()
             arrows = {
@@ -91,14 +90,14 @@ class NNModel:
                 )))
             for i in range(NUM_PROCESSES):
                 jobs[i].start()
-        else: # test model to show to user
+        elif not TRAIN_MODEL: # test model to show to user
             init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
             set_target_fps(FPS)
 
         last_screen = self.g.get_screen()
         for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
             bullet_on_screen, screen = self.g.get_screen(True)
-            if TRAIN_MODEL:
+            if BUILD_DL:
                 exp_inps.append(torch.cat((last_screen, screen), 0))
                 exp_outs.append(torch.zeros(FRAMES_PER_ACTION, 4).to(self.device))
 
@@ -123,7 +122,7 @@ class NNModel:
                     del exp_outs[-1]
                 else:
                     exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
-            else:
+            elif not TRAIN_MODEL:
                 self.g.Action_Update(
                     self.test(torch.cat((last_screen, screen), 0), bullet_on_screen),
                     self.l_2,
@@ -137,14 +136,16 @@ class NNModel:
                 last_screen = screen.detach().clone()
 
         q_fitness = self.g.score
-        return {
-            'fitness': self.validate() if TRAIN_MODEL else self.g.score, # score by model
-            'q_fitness': q_fitness, # score by Q-learning agent
-            'exp_inps': exp_inps,
-            'exp_outs': exp_outs
-        }
 
-    def validate(self): # should be run if TRAIN_MODEL
+        if BUILD_DL:
+            results['q_fitness'] = q_fitness # score by Q-learning agent
+            results['exp_inps'] = exp_inps
+            results['exp_outs'] = exp_outs
+        elif not TRAIN_MODEL:
+            results['fitness'] = self.validate() # score by model
+        return results
+
+    def validate(self): # should be run if TRAIN_MODEL (not when BUILD_DL)
         self.g = Game(self.device, self.seed)
         last_screen = self.g.get_screen()
         for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
@@ -174,11 +175,10 @@ class NNModel:
                 if self.pred[i * 4 + j] > m:
                     m = self.pred[i * 4 + j]
                     m_elem = j
-            model_action[i][m_elem] = 1
             # prevents model from pressing opposite action (wouldn't move either direction)
-            #for j in range(0, len(model_action), 2):
-            #    if model_action[i][j] == 1 and model_action[i][j + 1] == 1:
-            #        if self.pred[i * 4 + j] > self.pred[i * 4 + j + 1]: model_action[i][j + 1] = 0
-            #        else: model_action[i][j] = 0
+            for j in range(0, len(model_action), 2):
+                if model_action[i][j] == 1 and model_action[i][j + 1] == 1:
+                    if self.pred[i * 4 + j] > self.pred[i * 4 + j + 1]: model_action[i][j + 1] = 0
+                    else: model_action[i][j] = 0
 
         return model_action
