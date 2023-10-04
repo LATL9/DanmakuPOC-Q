@@ -102,7 +102,9 @@ if __name__ == '__main__':
             #for name, param in model.named_parameters():
             #    writer.add_histogram(name + '/grad', param.grad, global_step=epoch)
             optimizer.step()
+            print("Batch {}".format(i), end='\r')
             j = i
+        print('')
         error /= j + 1
 
         log.write("{}, {}, {}, {}, {}\n".format(
