@@ -8,7 +8,7 @@ import os
 import time
 
 #from torch.utils.tensorboard import SummaryWriter
-
+#
 # Create a summary writer
 #writer = SummaryWriter()
 
@@ -53,6 +53,12 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
     try:
+        training_loader = torch.load("training_loaders/training_loader.pt", map_location=device)
+
+    except FileNotFoundError:
+        exit("no training loader found. exiting.")
+
+    try:
         checkpoint = torch.load("models/model.pt", map_location=device)
         epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['model_state_dict'])
@@ -86,18 +92,6 @@ if __name__ == '__main__':
                 error
             ))
             exit() # if testing, exit now
-
-        training_data = QDataset(
-            inps=results['exp_inps'],
-            outs=results['exp_outs']
-        )
-        training_loader = torch.utils.data.DataLoader(
-            training_data,
-            batch_size=16,
-            shuffle=True,
-            num_workers=1
-        )
-        torch.save(training_loader, "training_loaders/training_loader-{}.pt".format(epoch))
 
         for i, (inputs, targets) in enumerate(training_loader):
             optimizer.zero_grad()

@@ -60,11 +60,11 @@ class NNModel:
 
     def train(self):
         self.g = Game(self.device, self.seed)
-        exp_inps = [] # expected tensor inputs (get_screen())
-        exp_outs = [] # expected tensor outputs (actions)
         results = {}
 
         if BUILD_DL:
+            exp_inps = [] # expected tensor inputs (get_screen())
+            exp_outs = [] # expected tensor outputs (actions)
             jobs = []
             manager = mp.Manager()
             arrows = {
@@ -94,54 +94,54 @@ class NNModel:
             init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
             set_target_fps(FPS)
 
-        last_screen = self.g.get_screen()
-        for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
-            bullet_on_screen, screen = self.g.get_screen(True)
-            if BUILD_DL:
-                exp_inps.append(torch.cat((last_screen, screen), 0))
-                exp_outs.append(torch.zeros(FRAMES_PER_ACTION, 4).to(self.device))
+        if BUILD_DL or not TRAIN_MODEL:
+            last_screen = self.g.get_screen()
+            for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
+                bullet_on_screen, screen = self.g.get_screen(True)
+                if BUILD_DL:
+                    exp_inps.append(torch.cat((last_screen, screen), 0))
+                    exp_outs.append(torch.zeros(FRAMES_PER_ACTION, 4).to(self.device))
 
-                self.game_dict[f] = self.g.export() # processes will start once next instance of Game() is available
-                while len(self.q_table_dict) != pow(4, FRAMES_PER_ACTION):
-                    pass # wait until all processes are "complete" (are waiting for next frame)
-                q_table.append(list({k: v for k, v in sorted(self.q_table_dict.items(), key=lambda item: item[0])}.values()))
-                for i in range(pow(4, FRAMES_PER_ACTION)):
-                    del self.q_table_dict[i]
+                    self.game_dict[f] = self.g.export() # processes will start once next instance of Game() is available
+                    while len(self.q_table_dict) != pow(4, FRAMES_PER_ACTION):
+                        pass # wait until all processes are "complete" (are waiting for next frame)
+                    q_table.append(list({k: v for k, v in sorted(self.q_table_dict.items(), key=lambda item: item[0])}.values()))
+                    for i in range(pow(4, FRAMES_PER_ACTION)):
+                        del self.q_table_dict[i]
 
-                print("Frame {}/{}: ".format(f, round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
-                max_q_value = max(q_table[-1])
-                exp_outs_dec = self.to_base4(self.rng.choice([index for (index, item) in enumerate(q_table[-1]) if item == max_q_value]))
-                for i in range(FRAMES_PER_ACTION):
-                    exp_outs[-1][i][exp_outs_dec[i]] = 1
-                    print(arrows[exp_outs_dec[i]], end='')
-                print(", Q-value {}".format(max_q_value), end='\r')
+                    print("Frame {}/{}: ".format(f, round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
+                    max_q_value = max(q_table[-1])
+                    exp_outs_dec = self.to_base4(self.rng.choice([index for (index, item) in enumerate(q_table[-1]) if item == max_q_value]))
+                    for i in range(FRAMES_PER_ACTION):
+                        exp_outs[-1][i][exp_outs_dec[i]] = 1
+                        print(arrows[exp_outs_dec[i]], end='')
+                    print(", Q-value {}".format(max_q_value), end='\r')
 
-                last_screen = self.g.Action_Update(exp_outs[-1], get_screen=True)
-                if not bullet_on_screen:
-                    del exp_inps[-1]
-                    del exp_outs[-1]
-                else:
-                    exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
-            elif not TRAIN_MODEL:
-                self.g.Action_Update(
-                    self.test(torch.cat((last_screen, screen), 0), bullet_on_screen),
-                    self.l_2,
-                    self.l_3,
-                    self.l_4,
-                    self.l_5,
-                    self.l_6,
-                    self.l_7,
-                    self.pred
-                )
-                last_screen = screen.detach().clone()
-
-        q_fitness = self.g.score
+                    last_screen = self.g.Action_Update(exp_outs[-1], get_screen=True)
+                    if not bullet_on_screen:
+                        del exp_inps[-1]
+                        del exp_outs[-1]
+                    else:
+                        exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
+                elif not TRAIN_MODEL:
+                    self.g.Action_Update(
+                        self.test(torch.cat((last_screen, screen), 0), bullet_on_screen),
+                        self.l_2,
+                        self.l_3,
+                        self.l_4,
+                        self.l_5,
+                        self.l_6,
+                        self.l_7,
+                        self.pred
+                    )
+                    last_screen = screen.detach().clone()
+            q_fitness = self.g.score
 
         if BUILD_DL:
             results['q_fitness'] = q_fitness # score by Q-learning agent
             results['exp_inps'] = exp_inps
             results['exp_outs'] = exp_outs
-        elif not TRAIN_MODEL:
+        elif TRAIN_MODEL: # if training (to validate) or testing
             results['fitness'] = self.validate() # score by model
         return results
 
