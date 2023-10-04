@@ -99,10 +99,8 @@ if __name__ == '__main__':
             loss = criterion(y, targets)
             error += float(loss)
             loss.backward()
-
             #for name, param in model.named_parameters():
             #    writer.add_histogram(name + '/grad', param.grad, global_step=epoch)
-
             optimizer.step()
 
         log.write("{}, {}, {}, {}, {}\n".format(
@@ -120,9 +118,8 @@ if __name__ == '__main__':
             torch.save(checkpoint, "models/model-{}.pt".format(epoch))
             os.system("cp models/model-{}.pt models/model.pt".format(epoch)) # model.pt = most recent
 
-        print("Epoch {}: Fitness = {}, Q-Learning Fitness = {}, Error = {}".format(
+        print("Epoch {}: Fitness = {}, Error = {}".format(
             epoch,
             fitness,
-            results['q_fitness'],
             error
         ))
