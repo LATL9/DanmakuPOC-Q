@@ -7,9 +7,9 @@ from pyray import *
 import os
 import time
 
-#from torch.utils.tensorboard import SummaryWriter
-#
-#writer = SummaryWriter()
+from torch.utils.tensorboard import SummaryWriter
+
+writer = SummaryWriter()
 
 def train():
     return test(device, seed, model)
@@ -98,12 +98,11 @@ if __name__ == '__main__':
             loss = criterion(y, targets)
             error += float(loss)
             loss.backward()
-            #for name, param in model.named_parameters():
-            #    writer.add_histogram(name + '/grad', param.grad, global_step=epoch)
+            for name, param in model.named_parameters():
+                writer.add_histogram(name + '/grad', param.grad, global_step=epoch)
             optimizer.step()
             print("Batch {}".format(i), end='\r')
             j = i
-        print('')
         error /= j + 1
 
         log.write("{}, {}, {}, {}, {}\n".format(

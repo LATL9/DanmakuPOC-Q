@@ -249,7 +249,7 @@ class Game:
 #            col = Color( c, c, c, 255 )
 #            c = round(max(min(float(l_7[y]), 1), 0) * 255)
 #            draw_rectangle(576, y * 4, 4, 4, col)
-
+#
         draw_text(str(self.score), 8, 32, 32, WHITE)
 
         for i in range(len(self.collide_count)):
@@ -365,34 +365,10 @@ class Game:
                 b_y - p_y >= HEIGHT / -3 and b_y - p_y < HEIGHT / 3:
                 x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
                 y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
-                s[0][y][x] = 1
+                for y_2 in range(max(0, y - 4), min(32, y + 4)):
+                    for x_2 in range(max(0, x - 4), min(32, x + 4)):
+                        s[0][y_2][x_2] = 1
                 if bullet:
                     bullet_on_screen = True
 
-        # barrier (previous for loop for bullets only draws one pixel, while barrier uses many pixels)
-        # -1 is used as barrier is drawn to the side of l_x, r_x, l_y, and r_y, not at that location
-        if BULLET_SIZE - 1 - p_x >= WIDTH / -3 and BULLET_SIZE - 1 - p_x < WIDTH / 3:
-            l_x = math.floor((((BULLET_SIZE - p_x) / (WIDTH / 3)) + 1) * 16)
-            for x in range(l_x):
-                for y in range(32):
-                    s[0][y][x] = 1
-        if WIDTH - 1 - p_x >= WIDTH / -3 and WIDTH - 1 - p_x < WIDTH / 3:
-            r_x = math.floor((((WIDTH - BULLET_SIZE - p_x) / (WIDTH / 3)) + 1) * 16)
-            for x in range(r_x, 32):
-                for y in range(32):
-                    s[0][y][x] = 1
-        if BULLET_SIZE - 1 - p_y >= HEIGHT / -3 and BULLET_SIZE - 1 - p_y < HEIGHT / 3:
-            l_y = math.floor((((BULLET_SIZE - p_y) / (HEIGHT / 3)) + 1) * 16)
-            for y in range(l_y):
-                s[0][y] = torch.ones(1, 32)
-        if HEIGHT - 1 - p_y >= HEIGHT / -3 and HEIGHT - 1 - p_y < HEIGHT / 3:
-            r_y = math.floor((((HEIGHT - BULLET_SIZE - p_y) / (HEIGHT / 3)) + 1) * 16)
-            for y in range(r_y, 32):
-                s[0][y] = torch.ones(1, 32)
-
-        #s = torch.zeros(1, 32, 32).to(self.device)
-        #for i in range(s.shape[0]):
-        #    for j in range(s.shape[1]):
-        #        for k in range(s.shape[2]):
-        #            s[i, j, k] = random.randint(0, 1)
         return (bullet_on_screen, s) if bullet else s

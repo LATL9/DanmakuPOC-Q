@@ -3,7 +3,7 @@ from common import *
 from game import *
 
 def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in decimal; end of range of actions is exclusive
-    for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
+    for f in range(round(TRAIN_FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
         while f == len(game_dict): pass # wait until current frame is ready
         i = index
         action = start.copy() # current action; each number = index for action (0 = up, 1 = down, 2 = left, 3 = right)
@@ -46,6 +46,12 @@ class NNModel:
         self.rng = random.Random(seed)
         self.model = model
         self.seed = seed
+        self.arrows = { 
+            0: '↑',
+            1: '↓',
+            2: '←',
+            3: '→'
+        }
 
     def reset(self, seed):
         self.g.Reset(seed)
@@ -67,12 +73,6 @@ class NNModel:
             exp_outs = [] # expected tensor outputs (actions)
             jobs = []
             manager = mp.Manager()
-            arrows = {
-                0: '↑',
-                1: '↓',
-                2: '←',
-                3: '→'
-            }
             q_table = [] # stores q-values for actions at the actual state
             max_q_value = -9e99 # stores max q-value for actions from state'
 
@@ -96,7 +96,7 @@ class NNModel:
 
         if BUILD_DL or not TRAIN_MODEL:
             last_screen = self.g.get_screen()
-            for f in range(round(GAME_FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
+            for f in range(round(TRAIN_FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
                 bullet_on_screen, screen = self.g.get_screen(True)
                 if BUILD_DL:
                     exp_inps.append(torch.cat((last_screen, screen), 0))
@@ -114,7 +114,7 @@ class NNModel:
                     exp_outs_dec = self.to_base4(self.rng.choice([index for (index, item) in enumerate(q_table[-1]) if item == max_q_value]))
                     for i in range(FRAMES_PER_ACTION):
                         exp_outs[-1][i][exp_outs_dec[i]] = 1
-                        print(arrows[exp_outs_dec[i]], end='')
+                        print(self.arrows[exp_outs_dec[i]], end='')
                     print(", Q-value {}".format(max_q_value), end='\r')
 
                     last_screen = self.g.Action_Update(exp_outs[-1], get_screen=True)
@@ -141,8 +141,8 @@ class NNModel:
             results['q_fitness'] = q_fitness # score by Q-learning agent
             results['exp_inps'] = exp_inps
             results['exp_outs'] = exp_outs
-        elif TRAIN_MODEL: # if training (to validate) or testing
-            results['fitness'] = self.validate() # score by model
+        else: # if training (to validate) or testing
+            results['fitness'] = self.validate() if TRAIN_MODEL else self.g.score # score by validation or model
         return results
 
     def validate(self): # should be run if TRAIN_MODEL (+ not BUILD_DL)
