@@ -92,11 +92,11 @@ class NNModel:
                 jobs[i].start()
         elif not TRAIN_MODEL: # test model to show to user
             init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
-            set_target_fps(FPS)
+            set_target_fps(GUI_FPS)
 
         if BUILD_DL or not TRAIN_MODEL:
             last_screen = self.g.get_screen()
-            for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
+            for f in range(round(GAME_FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
                 bullet_on_screen, screen = self.g.get_screen(True)
                 if BUILD_DL:
                     exp_inps.append(torch.cat((last_screen, screen), 0))
@@ -109,7 +109,7 @@ class NNModel:
                     for i in range(pow(4, FRAMES_PER_ACTION)):
                         del self.q_table_dict[i]
 
-                    print("Frame {}/{}: ".format(f, round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
+                    print("Frame {}/{}: ".format(f, round(GAME_FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
                     max_q_value = max(q_table[-1])
                     exp_outs_dec = self.to_base4(self.rng.choice([index for (index, item) in enumerate(q_table[-1]) if item == max_q_value]))
                     for i in range(FRAMES_PER_ACTION):
@@ -124,7 +124,7 @@ class NNModel:
                     else:
                         exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
                 elif not TRAIN_MODEL:
-                    self.g.Action_Update(
+                    last_screen = self.g.Action_Update(
                         self.test(torch.cat((last_screen, screen), 0), bullet_on_screen),
                         self.l_2,
                         self.l_3,
@@ -132,9 +132,9 @@ class NNModel:
                         self.l_5,
                         self.l_6,
                         self.l_7,
-                        self.pred
+                        self.pred,
+                        get_screen=True
                     )
-                    last_screen = screen.detach().clone()
             q_fitness = self.g.score
 
         if BUILD_DL:
@@ -145,13 +145,12 @@ class NNModel:
             results['fitness'] = self.validate() # score by model
         return results
 
-    def validate(self): # should be run if TRAIN_MODEL (not when BUILD_DL)
+    def validate(self): # should be run if TRAIN_MODEL (+ not BUILD_DL)
         self.g = Game(self.device, self.seed)
         last_screen = self.g.get_screen()
-        for f in range(round(FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
+        for f in range(round(GAME_FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
             screen = self.g.get_screen()
-            self.g.Action_Update(self.test(torch.cat((last_screen, screen), 0)), validate=True)
-            last_screen = screen.detach().clone()
+            last_screen = self.g.Action_Update(self.test(torch.cat((last_screen, screen), 0)), get_screen=True, validate=TRAIN_MODEL)
         return self.g.score
 
     def test(self, x, batches=False):
@@ -171,10 +170,11 @@ class NNModel:
             m = -1
             m_elem = 0
             for j in range(4):
-                #if self.pred[i * 4 + j] > 0: model_action[i][j] = 1
-                if self.pred[i * 4 + j] > m:
-                    m = self.pred[i * 4 + j]
-                    m_elem = j
+                if self.pred[i * 4 + j] > 0: model_action[i][j] = 1
+                #if self.pred[i * 4 + j] > m:
+                #    m = self.pred[i * 4 + j]
+                #    m_elem = j
+            model_action[i][m_elem] = 1
             # prevents model from pressing opposite action (wouldn't move either direction)
             for j in range(0, len(model_action), 2):
                 if model_action[i][j] == 1 and model_action[i][j + 1] == 1:

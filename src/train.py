@@ -9,7 +9,6 @@ import time
 
 #from torch.utils.tensorboard import SummaryWriter
 #
-# Create a summary writer
 #writer = SummaryWriter()
 
 def train():

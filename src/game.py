@@ -24,12 +24,12 @@ class Game:
         else:
             self.player = Player(WIDTH // 2, HEIGHT // 2 if BULLET_TYPE == BULLET_HONE else HEIGHT - 64 , PLAYER_SIZE)
         if not TRAIN_MODEL:
-            self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (FPS * 2.5 - 1) = not touching, FPS * 2.5 = end and point reward
+            self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (GAME_FPS * 2.5 - 1) = not touching, GAME_FPS * 2.5 = end and point reward
             self.collides = [] # shows collisions (used for demonstration, not in training)
             self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
 
         if frame_count:
-            self.frame_count = frame_count if BULLET_TYPE == BULLET_HONE else FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
+            self.frame_count = frame_count if BULLET_TYPE == BULLET_HONE else GAME_FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
         else:
             self.frame_count = 0
             for i in range(NUM_BULLETS):
@@ -76,7 +76,7 @@ class Game:
         self.bullets.clear()
 
         if BULLET_TYPE == BULLET_HONE:
-            self.frame_count = FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
+            self.frame_count = GAME_FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
         else:
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
@@ -106,24 +106,25 @@ class Game:
             # converts int representation into one-hot vector as input
             if type(key) is int:
                 key = [1 if i == key else 0 for i in range(4)]
-            self.Update(
-                key,
-                l_2,
-                l_3,
-                l_4,
-                l_5,
-                l_6,
-                l_7,
-                pred,
-                validate=validate
-            )
+            for j in range(GAME_FPS // TRAIN_FPS):
+                self.Update(
+                    key,
+                    l_2,
+                    l_3,
+                    l_4,
+                    l_5,
+                    l_6,
+                    l_7,
+                    pred,
+                    validate=validate
+                )
         return last_screen if get_screen else self.score
     
     def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, validate=False): # extra paramters used when not TRAIN_MODEL
         if not TRAIN_MODEL:
             self.keys = keys
             self.collides = []
-            if self.untouched_count < FPS * 2 + 1:
+            if self.untouched_count < GAME_FPS * 2 + 1:
                 self.untouched_count += 1
 
         self.colliding = [False for i in range(len(self.colliding))]
@@ -179,12 +180,12 @@ class Game:
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
-            if self.frame_count == FPS // NUM_BULLETS:
+            if self.frame_count == GAME_FPS // NUM_BULLETS:
                 self.frame_count = 0
                 self.bullets.append(self.new_bullet(BULLET_HONE))
 
         if not TRAIN_MODEL:
-            if self.untouched_count == FPS * 2 + 1:
+            if self.untouched_count == GAME_FPS * 2 + 1:
                 self.score += 1
 
             begin_drawing()
@@ -283,8 +284,8 @@ class Game:
                 BULLET_SIZE * -1 + 1,
                 BULLET_SIZE,
                 BULLET_SIZE,
-                round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, 240 // FPS),
-                self.rng.randint(1, 480 // FPS)
+                round((self.rng.randint(0, 1) - 0.5) * 2) * self.rng.randint(1, 240 // GAME_FPS),
+                self.rng.randint(1, 480 // GAME_FPS)
             )
         elif b == BULLET_HONE:
             # edge that bullet is fired from:
@@ -389,4 +390,9 @@ class Game:
             for y in range(r_y, 32):
                 s[0][y] = torch.ones(1, 32)
 
+        #s = torch.zeros(1, 32, 32).to(self.device)
+        #for i in range(s.shape[0]):
+        #    for j in range(s.shape[1]):
+        #        for k in range(s.shape[2]):
+        #            s[i, j, k] = random.randint(0, 1)
         return (bullet_on_screen, s) if bullet else s
