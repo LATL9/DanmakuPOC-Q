@@ -7,9 +7,9 @@ from pyray import *
 import os
 import time
 
-from torch.utils.tensorboard import SummaryWriter
-
-writer = SummaryWriter()
+#from torch.utils.tensorboard import SummaryWriter
+#
+#writer = SummaryWriter()
 
 def train():
     return test(device, seed, model)
@@ -74,6 +74,11 @@ if __name__ == '__main__':
         log = open("log.csv", 'w')
         log.write("Time, Seed, Epoch, Fitness, Error\n") # header
 
+    # TODO: figure out how to calculate number of batches given a DataLoader
+    for i, (inputs, targets) in enumerate(training_loader):
+        size = i
+    size += 1
+
     while True:
         epoch += 1
 
@@ -98,12 +103,11 @@ if __name__ == '__main__':
             loss = criterion(y, targets)
             error += float(loss)
             loss.backward()
-            for name, param in model.named_parameters():
-                writer.add_histogram(name + '/grad', param.grad, global_step=epoch)
+            #for name, param in model.named_parameters():
+            #    writer.add_histogram(name + '/grad', param.grad, global_step=epoch)
             optimizer.step()
             print("Batch {}".format(i), end='\r')
-            j = i
-        error /= j + 1
+        error /= size + 1
 
         log.write("{}, {}, {}, {}, {}\n".format(
             time.asctime(),
