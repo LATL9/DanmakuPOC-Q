@@ -1,9 +1,9 @@
 import torch.multiprocessing as mp
 
-BUILD_DL = False
+BUILD_DL = True
 # True = use Q-learning agent to build DataLoader for training
 # False = don't and do TRAIN_MODEL instead
-TRAIN_MODEL = False
+TRAIN_MODEL = True
 # True = train model
 # False = test model
 WIDTH = 800
@@ -17,7 +17,7 @@ PLAYER_SIZE = 8
 
 NUM_BULLETS = 3
 NUM_PROCESSES = mp.cpu_count()
-TRAIN_TIME = 999 # seconds
+TRAIN_TIME = 32 # seconds
 
 BULLET_RANDOM = 0
 BULLET_HONE = 1 # NUM_BULLETS represents number of bullets fired per second when BULLET_HONE is used
