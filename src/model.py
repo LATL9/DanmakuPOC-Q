@@ -65,7 +65,6 @@ class NNModel:
                 return l
 
     def train(self):
-        self.g = Game(self.device, self.seed)
         results = {}
 
         if BUILD_DL:
@@ -93,6 +92,7 @@ class NNModel:
         elif not TRAIN_MODEL: # test model to show to user
             init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
             set_target_fps(GUI_FPS)
+        self.g = Game(self.device, self.seed)
 
         if BUILD_DL or not TRAIN_MODEL:
             last_screen = self.g.get_screen()

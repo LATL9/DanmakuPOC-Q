@@ -11,6 +11,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import time # REMOVE ZZZZZZZZ
+
 class Game:
     def __init__(self, device, seed, player=False, bullets=False, score=0, frame_count=False, collide_count=False):
         self.device = device
@@ -72,6 +74,7 @@ class Game:
         self.rng = random.Random(seed)
         if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
         else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
+        self.player.sprite = load_texture("reimu.png")
 
         self.bullets.clear()
 
@@ -216,7 +219,7 @@ class Game:
         draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 128 ))
         for y in range(32):
             for x in range(32):
-                if s[0, y, x] == 1: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, 128 ))
+                if s[0, y, x] > 0: draw_rectangle(x * 8, y * 8, 8, 8, Color( s[0, y, x] * 255, 0, 0, 128 ))
 
         # layers
 #        for i in range(l_2.shape[0]):
@@ -249,7 +252,7 @@ class Game:
 #            col = Color( c, c, c, 255 )
 #            c = round(max(min(float(l_7[y]), 1), 0) * 255)
 #            draw_rectangle(576, y * 4, 4, 4, col)
-#
+
         draw_text(str(self.score), 8, 32, 32, WHITE)
 
         for i in range(len(self.collide_count)):
@@ -343,12 +346,13 @@ class Game:
             (r1.x > r2.x and r2.x + r2.width > r1.x)) and \
             (r1.y == r2.y or \
             (r1.y < r2.y and r1.y + r1.height > r2.y) or \
-            (r1.y > r2.y and r2.y + r2.height > r1.y)): return True
+            (r1.y > r2.y and r2.y + r2.height > r1.y)):
+                return True
         return False
 
     def get_screen(self, bullet=False): # if bullet, also return whether or not a bullet is in screen (discard from training dataset if none)
         # creates 2D tensor (32x32) indicating location of bullets (0 = no bullet, 1 = bullet)
-        # a third of the dimensions of the screen around the player is used (therefore two thirds (x and y) of the screen is used)
+        # a half of the dimensions of the screen around the player is used (therefore dimensions of screen is used)
         # centre (top-left corner of (16, 16)) is player
         s = torch.zeros(1, 32, 32).to(self.device)
         p_x = self.player.pos.x + self.player.pos.width / 2
@@ -361,13 +365,15 @@ class Game:
             # for bullets as well
             b_x = self.bullets[i].pos.x + self.bullets[i].pos.width / 2
             b_y = self.bullets[i].pos.y + self.bullets[i].pos.height / 2
-            if b_x - p_x >= WIDTH / -3 and b_x - p_x < WIDTH / 3 and \
-                b_y - p_y >= HEIGHT / -3 and b_y - p_y < HEIGHT / 3:
-                x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
-                y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
-                for y_2 in range(max(0, y - 4), min(32, y + 4)):
-                    for x_2 in range(max(0, x - 4), min(32, x + 4)):
-                        s[0][y_2][x_2] = 1
+            if b_x - p_x >= WIDTH / -2 and b_x - p_x < WIDTH / 2 and \
+                b_y - p_y >= HEIGHT / -2 and b_y - p_y < HEIGHT / 2:
+                x = math.floor((((b_x - p_x) / (WIDTH / 2)) + 1) * 16)
+                y = math.floor((((b_y - p_y) / (HEIGHT / 2)) + 1) * 16)
+                for y_2 in range(-2, 2):
+                    for x_2 in range(-2, 2):
+                        if abs(x_2 + 0.5) == 1.5 and abs(y_2 + 0.5) == 1.5:
+                            continue
+                        s[0][max(min(y + y_2, 31), 0)][max(min(x + x_2, 31), 0)] = 0.75 if abs(x_2 + 0.5) == 1.5 or abs(y_2 + 0.5) == 1.5 else 1
                 if bullet:
                     bullet_on_screen = True
 
