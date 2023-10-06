@@ -170,11 +170,7 @@ class NNModel:
             m = -1
             m_elem = 0
             for j in range(4):
-                if self.pred[i * 4 + j] > 0: model_action[i][j] = 1
-                #if self.pred[i * 4 + j] > m:
-                #    m = self.pred[i * 4 + j]
-                #    m_elem = j
-            model_action[i][m_elem] = 1
+                if self.pred[i * 4 + j] >= ACTION_THRESHOLD: model_action[i][j] = 1
             # prevents model from pressing opposite action (wouldn't move either direction)
             for j in range(0, len(model_action), 2):
                 if model_action[i][j] == 1 and model_action[i][j + 1] == 1:
