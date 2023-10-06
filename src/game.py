@@ -340,13 +340,13 @@ class Game:
                 v_y
             )
 
-    def is_colliding(self, r1, r2):
-        if (r1.x == r2.x or \
-            (r1.x < r2.x and r1.x + r1.width > r2.x) or \
-            (r1.x > r2.x and r2.x + r2.width > r1.x)) and \
-            (r1.y == r2.y or \
-            (r1.y < r2.y and r1.y + r1.height > r2.y) or \
-            (r1.y > r2.y and r2.y + r2.height > r1.y)):
+    def is_colliding(self, r_1, r_2):
+        if (r_1.x == r_2.x or \
+            (r_1.x < r_2.x and r_1.x + r_1.width > r_2.x) or \
+            (r_1.x > r_2.x and r_2.x + r_2.width > r_1.x)) and \
+            (r_1.y == r_2.y or \
+            (r_1.y < r_2.y and r_1.y + r_1.height > r_2.y) or \
+            (r_1.y > r_2.y and r_2.y + r_2.height > r_1.y)):
                 return True
         return False
 
