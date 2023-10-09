@@ -25,8 +25,9 @@ class Game:
             self.player = Player(*player)
         else:
             self.player = Player(WIDTH // 2, HEIGHT // 2 if BULLET_TYPE == BULLET_HONE else HEIGHT - 64 , PLAYER_SIZE)
-        if not TRAIN_MODEL:
+        if not BUILD_DL:
             self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (GAME_FPS * 2.5 - 1) = not touching, GAME_FPS * 2.5 = end and point reward
+        if not TRAIN_MODEL:
             self.collides = [] # shows collisions (used for demonstration, not in training)
             self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
 
