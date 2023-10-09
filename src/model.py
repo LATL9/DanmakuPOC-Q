@@ -109,7 +109,7 @@ class NNModel:
                     for i in range(pow(4, FRAMES_PER_ACTION)):
                         del self.q_table_dict[i]
 
-                    print("Frame {}/{}: ".format(f, round(GAME_FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
+                    print("Frame {}/{}: ".format(f, round(TRAIN_FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
                     max_q_value = max(q_table[-1])
                     exp_outs_dec = self.to_base4(self.rng.choice([index for (index, item) in enumerate(q_table[-1]) if item == max_q_value]))
                     for i in range(FRAMES_PER_ACTION):
@@ -148,7 +148,7 @@ class NNModel:
     def validate(self): # should be run if TRAIN_MODEL (+ not BUILD_DL)
         self.g = Game(self.device, self.seed)
         last_screen = self.g.get_screen()
-        for f in range(round(GAME_FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
+        for f in range(round(TRAIN_FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
             screen = self.g.get_screen()
             last_screen = self.g.Action_Update(self.test(torch.cat((last_screen, screen), 0)), get_screen=True, validate=TRAIN_MODEL)
         return self.g.score

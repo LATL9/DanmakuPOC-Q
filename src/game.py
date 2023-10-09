@@ -74,7 +74,6 @@ class Game:
         self.rng = random.Random(seed)
         if BULLET_TYPE == BULLET_HONE: self.player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SIZE)
         else: self.player = Player(WIDTH // 2, HEIGHT - 64, PLAYER_SIZE)
-        self.player.sprite = load_texture("reimu.png")
 
         self.bullets.clear()
 
@@ -119,16 +118,18 @@ class Game:
                     l_6,
                     l_7,
                     pred,
-                    validate=validate
+                    frame=i,
+                    validate=validate,
                 )
         return last_screen if get_screen else self.score
     
-    def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, validate=False): # extra paramters used when not TRAIN_MODEL
-        if not TRAIN_MODEL:
-            self.keys = keys
-            self.collides = []
+    def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, frame=0, validate=False): # extra paramters used when not TRAIN_MODEL
+        if not BUILD_DL:
             if self.untouched_count < GAME_FPS * 2 + 1:
                 self.untouched_count += 1
+            if not TRAIN_MODEL:
+                self.keys = keys
+                self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
             
@@ -154,7 +155,7 @@ class Game:
                 self.bullets[i].pos):
                 if self.colliding[0] == False:
                     self.colliding[0] = True
-                    self.score -= 4
+                    self.score -= 48 // GAME_FPS
                 if not TRAIN_MODEL:
                     self.collides.append(i);
                     self.collide_count[0] += 1
@@ -166,20 +167,18 @@ class Game:
                 self.bullets[i].pos):
                 if self.colliding[1] == False:
                     self.colliding[1] = True
-                    self.score -= 16
+                    self.score -= 192 // GAME_FPS
                 if not TRAIN_MODEL:
                     self.collides.append(i);
                     self.collide_count[1] += 1
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 if self.colliding[2] == False:
                     self.colliding[2] = True
+                    self.score -= 999999 if TRAIN_MODEL else 768 // GAME_FPS # high penalty prevents q-learning agent from even considering touching a bullet
                 if not TRAIN_MODEL:
-                    self.score -= 64
                     self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                     self.collides.append(i);
                     self.collide_count[2] += 1
-                else:
-                    self.score -= 64 if validate else 999999 # high penalty prevents q-learning agent from even considering touching a bullet
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
@@ -187,26 +186,27 @@ class Game:
                 self.frame_count = 0
                 self.bullets.append(self.new_bullet(BULLET_HONE))
 
-        if not TRAIN_MODEL:
+        if not BUILD_DL:
             if self.untouched_count == GAME_FPS * 2 + 1:
-                self.score += 1
-
-            begin_drawing()
-            self.Draw(
-                l_2,
-                l_3,
-                l_4,
-                l_5,
-                l_6,
-                l_7,
-                pred
-            )
-            draw_fps(8, 8)
-            end_drawing()
+                self.score += 48 // GAME_FPS
+            if not TRAIN_MODEL:
+                begin_drawing()
+                self.Draw(
+                    l_2,
+                    l_3,
+                    l_4,
+                    l_5,
+                    l_6,
+                    l_7,
+                    pred,
+                    frame
+                )
+                draw_fps(8, 8)
+                end_drawing()
 
         return self.score
 
-    def Draw(self, l_2, l_3, l_4, l_5, l_6, l_7, pred):
+    def Draw(self, l_2, l_3, l_4, l_5, l_6, l_7, pred, frame):
         clear_background(BLACK)
         
         self.player.Draw()
@@ -265,7 +265,7 @@ class Game:
             3: "R",
         }
         for i in k:
-            p = round(max(min(pred[i], 1), -1) * 96)
+            p = round(max(min(pred[frame * 4 + i], 1), -1) * 96)
             if self.keys[i] == 1:
                 col_text = Color( 0, 255, 0, 192 )
                 col_rect = Color( 0, 255, 0, 192 )
@@ -352,7 +352,7 @@ class Game:
 
     def get_screen(self, bullet=False): # if bullet, also return whether or not a bullet is in screen (discard from training dataset if none)
         # creates 2D tensor (32x32) indicating location of bullets (0 = no bullet, 1 = bullet)
-        # a half of the dimensions of the screen around the player is used (therefore dimensions of screen is used)
+        # a thhird of the dimensions of the screen around the player is used (therefore two-thirds of screen (x and y) is used)
         # centre (top-left corner of (16, 16)) is player
         s = torch.zeros(1, 32, 32).to(self.device)
         p_x = self.player.pos.x + self.player.pos.width / 2
@@ -363,17 +363,16 @@ class Game:
         # first dimension
         for i in range(len(self.bullets)):
             # for bullets as well
-            b_x = self.bullets[i].pos.x + self.bullets[i].pos.width / 2
-            b_y = self.bullets[i].pos.y + self.bullets[i].pos.height / 2
-            if b_x - p_x >= WIDTH / -2 and b_x - p_x < WIDTH / 2 and \
-                b_y - p_y >= HEIGHT / -2 and b_y - p_y < HEIGHT / 2:
-                x = math.floor((((b_x - p_x) / (WIDTH / 2)) + 1) * 16)
-                y = math.floor((((b_y - p_y) / (HEIGHT / 2)) + 1) * 16)
-                for y_2 in range(-2, 2):
-                    for x_2 in range(-2, 2):
-                        if abs(x_2 + 0.5) == 1.5 and abs(y_2 + 0.5) == 1.5:
-                            continue
-                        s[0][max(min(y + y_2, 31), 0)][max(min(x + x_2, 31), 0)] = 0.75 if abs(x_2 + 0.5) == 1.5 or abs(y_2 + 0.5) == 1.5 else 1
+            b_x = self.bullets[i].pos.x + self.bullets[i].pos.width / 3
+            b_y = self.bullets[i].pos.y + self.bullets[i].pos.height / 3
+            if b_x - p_x >= WIDTH / -3 and b_x - p_x < WIDTH / 3 and \
+                b_y - p_y >= HEIGHT / -3 and b_y - p_y < HEIGHT / 3:
+                x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
+                y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
+                for y_2 in range(-2, 3):
+                    for x_2 in range(-2, 3):
+                        if pow(pow(x_2, 2) + pow(y_2, 2), 0.5) <= 2.5:
+                            s[0][max(min(y + y_2, 31), 0)][max(min(x + x_2, 31), 0)] = 1
                 if bullet:
                     bullet_on_screen = True
 

@@ -1,16 +1,16 @@
 import torch.multiprocessing as mp
 
-BUILD_DL = True
+BUILD_DL = False
 # True = use Q-learning agent to build DataLoader for training
 # False = don't and do TRAIN_MODEL instead
-TRAIN_MODEL = True
-# True = train model
+TRAIN_MODEL = False
+# True = train model (must be True if BUILD_DL is True)
 # False = test model
 WIDTH = 800
 HEIGHT = 800
-TRAIN_FPS = 24 # internal FPS to use when training
-GUI_FPS = 60 # FPS used with Raylib (should be multiple of FPS)
-GAME_FPS = TRAIN_FPS if BUILD_DL or TRAIN_MODEL else GUI_FPS
+TRAIN_FPS = 12 # internal FPS to use when training
+GUI_FPS = 48 # FPS used with Raylib (should be multiple of FPS)
+GAME_FPS = TRAIN_FPS if TRAIN_MODEL else GUI_FPS
 
 BULLET_SIZE = 12
 PLAYER_SIZE = 8
@@ -26,5 +26,5 @@ BULLET_TYPE = BULLET_HONE # current type
 
 ACTION_THRESHOLD = 0.25
 DISCOUNT_RATE = 0.9
-FRAMES_PER_ACTION = 4 # must be > 1, otherwise code in train() in Model will break
+FRAMES_PER_ACTION = 3 # must be > 1, otherwise code in train() in Model will break
 LEARNING_RATE = 1e-5
