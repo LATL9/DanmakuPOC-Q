@@ -175,7 +175,7 @@ class Game:
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 if self.colliding[2] == False:
                     self.colliding[2] = True
-                    self.score -= 999999 if TRAIN_MODEL else 768 // GAME_FPS # high penalty prevents q-learning agent from even considering touching a bullet
+                    self.score -= 999999 if BUILD_DL else 768 // GAME_FPS # high penalty prevents q-learning agent from even considering touching a bullet
                 if not TRAIN_MODEL:
                     self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                     self.collides.append(i);
