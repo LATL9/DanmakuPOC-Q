@@ -1,9 +1,9 @@
 import torch.multiprocessing as mp
 
-BUILD_DL = True
+BUILD_DL = False
 # True = use Q-learning agent to build DataLoader for training
 # False = don't and do TRAIN_MODEL instead
-TRAIN_MODEL = True
+TRAIN_MODEL = False
 # True = train model (must be True if BUILD_DL is True)
 # False = test model
 WIDTH = 800
@@ -14,6 +14,10 @@ GAME_FPS = TRAIN_FPS if TRAIN_MODEL else GUI_FPS
 
 BULLET_SIZE = 12
 PLAYER_SIZE = 8
+# odd multiple of player's width and height
+# one multiple represents player and rest halved each side
+GRAZE_SIZE = 9 if not TRAIN_MODEL else 7 # graze collision box
+TOUCH_SIZE = 19 if not TRAIN_MODEL else 13 # touch collision box
 
 NUM_BULLETS = 3
 NUM_PROCESSES = mp.cpu_count()

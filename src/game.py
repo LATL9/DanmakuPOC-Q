@@ -149,10 +149,10 @@ class Game:
 
         for i in range(len(self.bullets)):
             if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * 4),
-                self.player.pos.y - round(self.player.pos.height * 4),
-                self.player.pos.width * 9,
-                self.player.pos.height * 9),
+                self.player.pos.x - round(self.player.pos.width * ((TOUCH_SIZE - 1) // 2)),
+                self.player.pos.y - round(self.player.pos.height * ((TOUCH_SIZE - 1) // 2)),
+                self.player.pos.width * TOUCH_SIZE,
+                self.player.pos.height * TOUCH_SIZE),
                 self.bullets[i].pos):
                 if self.colliding[0] == False:
                     self.colliding[0] = True
@@ -161,10 +161,10 @@ class Game:
                     self.collides.append(i);
                     self.collide_count[0] += 1
             if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * 1.5),
-                self.player.pos.y - round(self.player.pos.height * 1.5),
-                self.player.pos.width * 4,
-                self.player.pos.height * 4),
+                self.player.pos.x - round(self.player.pos.width *  ((GRAZE_SIZE - 1) // 2)),
+                self.player.pos.y - round(self.player.pos.height *  ((GRAZE_SIZE - 1) // 2)),
+                self.player.pos.width * GRAZE_SIZE,
+                self.player.pos.height * GRAZE_SIZE),
                 self.bullets[i].pos):
                 if self.colliding[1] == False:
                     self.colliding[1] = True
