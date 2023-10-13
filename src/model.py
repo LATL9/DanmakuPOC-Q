@@ -12,8 +12,8 @@ def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in
         while action != end:
             # new instance of Game means Update() can be run once for action and Sim_Update() for action_new
             _g = g.copy()
+            q_value = _g.Action_Update(action) - g.score
             fitness = _g.score
-            q_value = _g.Action_Update(action) - fitness
             action_new = [0 for j in range(FRAMES_PER_ACTION)] # current action for state'
             max_q_value = -9e99
 
@@ -28,7 +28,7 @@ def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in
                     else:
                         break
 
-            q_value += LEARNING_RATE * (q_value + DISCOUNT_RATE * max_q_value) # reward and q-value are the same at this point, so they're ommited from equation as they cancel each other out
+            q_value += DISCOUNT_RATE * max_q_value # reward and q-value are the same at this point, so they're ommited from equation as they cancel each other out
             q_table_dict[i] = q_value # write q_value to static dictionary
 
             i += 1
@@ -89,7 +89,7 @@ class NNModel:
                 )))
             for i in range(NUM_PROCESSES):
                 jobs[i].start()
-        elif not TRAIN_MODEL: # test model to show to user
+        elif TRAIN_MODEL: # test model to show to user # add not back zz
             init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
             set_target_fps(GUI_FPS)
         self.g = Game(self.device, self.seed)
@@ -112,12 +112,38 @@ class NNModel:
                     print("Frame {}/{}: ".format(f, round(TRAIN_FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
                     max_q_value = max(q_table[-1])
                     exp_outs_dec = self.to_base4(self.rng.choice([index for (index, item) in enumerate(q_table[-1]) if item == max_q_value]))
-                    for i in range(FRAMES_PER_ACTION):
-                        exp_outs[-1][i][exp_outs_dec[i]] = 1
-                        print(self.arrows[exp_outs_dec[i]], end='')
-                    print(", Q-value {}".format(max_q_value), end='\r')
+                    actual_outs = [ # actual action inputted to Game (no estimated confidence)
+                        [0 for i in range(4)]
+                        for j in range(FRAMES_PER_ACTION)
+                    ]
 
-                    last_screen = self.g.Action_Update(exp_outs[-1], get_screen=True)
+                    # estimate confidence for other directions
+                    for i in range(FRAMES_PER_ACTION):
+                        for j in range(4): # for each direction
+                            min_q_value = 9e99 # lowest q_value (excluding extremely high q_values (therefore bullet touched player))
+                            sum_q_value = 0 # total q_value (also excluding high q_values)
+                            for k in range(j, len(q_table[-1]), pow(4, i + 1)):
+                                for l in range(k, k + pow(4, i)):
+                                    if q_table[-1][k] > -9e90:
+                                        min_q_value = min(min_q_value, q_table[-1][k])
+                                        sum_q_value += q_table[-1][k]
+                            if min_q_value != 9e99: # if equal, all ways of moving in direction at frame cause bullet to touch player; confidence should be 0
+                                if min_q_value == 0: # division by zero
+                                    exp_outs[-1][i][j] = 0.75 if j == exp_outs_dec[i] else ACTION_THRESHOLD
+                                else:
+                                    exp_outs[-1][i][j] = -1 * ((sum_q_value / pow(4, FRAMES_PER_ACTION - 1)) - min_q_value) / min_q_value
+                                    if j == exp_outs_dec[i]:
+                                        exp_outs[-1][i][j] = max(0.75, exp_outs[-1][i][j] * ACTION_THRESHOLD)
+                                    else:
+                                        exp_outs[-1][i][j] *= ACTION_THRESHOLD
+                                # confidence between min_q_value and 0 is mapped to between 0 and ACTION_THRESHOLD or 0-0.75 if choosed action
+                        actual_outs[i][exp_outs_dec[i]] = 1
+
+                    for i in range(FRAMES_PER_ACTION):
+                        print(self.arrows[exp_outs_dec[i]], end='')
+                    print(", Q-value {}{}".format(max_q_value, ' ' * 10), end='\r')
+
+                    last_screen = self.g.Action_Update(actual_outs, get_screen=True)
                     if not bullet_on_screen:
                         del exp_inps[-1]
                         del exp_outs[-1]
@@ -170,7 +196,7 @@ class NNModel:
             m = -1
             m_elem = 0
             for j in range(4):
-                if self.pred[i * 4 + j] >= ACTION_THRESHOLD: model_action[i][j] = 1
+                if self.pred[i * 4 + j] > ACTION_THRESHOLD: model_action[i][j] = 1
             # prevents model from pressing opposite action (wouldn't move either direction)
             for j in range(0, len(model_action), 2):
                 if model_action[i][j] == 1 and model_action[i][j + 1] == 1:

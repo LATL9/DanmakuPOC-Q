@@ -5,6 +5,7 @@ from dataset import *
 from player import *
 
 from pyray import *
+import copy
 import math
 import random
 import torch
@@ -40,7 +41,7 @@ class Game:
 
     def copy(self):
         g = Game(self.device, self.seed)
-        g.player = self.player
+        g.player = self.player.copy()
         g.bullets = [self.bullets[i].copy() for i in range(len(self.bullets))]
         g.score = self.score
         g.frame_count = self.frame_count
@@ -86,6 +87,7 @@ class Game:
 
     def Sim_Update(self, action): # simulates an update and returns change in fitnesss
         # create copies of changed variables in Update() to rollback once Sim_Update() finishes
+        _rng = copy.copy(self.rng)
         _player = self.player.copy()
         _bullets = [self.bullets[i].copy() for i in range(len(self.bullets))]
         _score = self.score
@@ -94,6 +96,7 @@ class Game:
         fitness = self.Action_Update(action)
 
         # restore copies of changed variables
+        self.rng = copy.copy(_rng)
         self.player = _player.copy()
         self.bullets = [_bullets[i].copy() for i in range(len(_bullets))]
         self.score = _score
@@ -106,7 +109,7 @@ class Game:
             i += 1
             if get_screen and i == len(action) - 1:
                 last_screen = self.get_screen() # used for past context
-            # converts int representation into one-hot vector as input
+            # parses int representation into one-hot vector as input
             if type(key) is int:
                 key = [1 if i == key else 0 for i in range(4)]
             for j in range(GAME_FPS // TRAIN_FPS):
@@ -122,6 +125,21 @@ class Game:
                     frame=i,
                     validate=validate,
                 )
+                if not BUILD_DL:
+                    begin_drawing()
+                    self.Draw(
+                        l_2,
+                        l_3,
+                        l_4,
+                        l_5,
+                        l_6,
+                        l_7,
+                        key,
+                        i
+                    )
+                    draw_fps(8, 8)
+                    end_drawing()
+
         return last_screen if get_screen else self.score
     
     def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, frame=0, validate=False): # extra paramters used when not TRAIN_MODEL
@@ -133,7 +151,9 @@ class Game:
                 self.collides = []
 
         self.colliding = [False for i in range(len(self.colliding))]
-            
+
+        ox = self.player.pos.x
+        oy = self.player.pos.y
         self.player.Update(keys)
         for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
             self.bullets[i].Update()
@@ -175,7 +195,7 @@ class Game:
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 if self.colliding[2] == False:
                     self.colliding[2] = True
-                    self.score -= 999999 if BUILD_DL else 768 // GAME_FPS # high penalty prevents q-learning agent from even considering touching a bullet
+                    self.score -= 9e99 if BUILD_DL else 768 // GAME_FPS # high penalty prevents q-learning agent from even considering touching a bullet
                 if not TRAIN_MODEL:
                     self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                     self.collides.append(i);
@@ -212,7 +232,7 @@ class Game:
         
         self.player.Draw()
         for i in range(len(self.bullets)): self.bullets[i].Draw()
-        for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
+        #for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
 
         # minimap
         s = self.get_screen()
@@ -256,8 +276,8 @@ class Game:
 
         draw_text(str(self.score), 8, 32, 32, WHITE)
 
-        for i in range(len(self.collide_count)):
-            draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
+        #for i in range(len(self.collide_count)):
+        #    draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
 
         k = {
             0: "U",
@@ -266,8 +286,8 @@ class Game:
             3: "R",
         }
         for i in k:
-            p = round(max(min(pred[frame * 4 + i], 1), -1) * 96)
-            if self.keys[i] == 1:
+            p = round(max(min(float(pred[i]), 1), -1) * 96)
+            if float(pred[i]) > 0.5:
                 col_text = Color( 0, 255, 0, 192 )
                 col_rect = Color( 0, 255, 0, 192 )
                 draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)
