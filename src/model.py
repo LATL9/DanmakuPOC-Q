@@ -89,7 +89,7 @@ class NNModel:
                 )))
             for i in range(NUM_PROCESSES):
                 jobs[i].start()
-        elif TRAIN_MODEL: # test model to show to user # add not back zz
+        elif not TRAIN_MODEL: # test model to show to user # add not back zz
             init_window(WIDTH, HEIGHT, "DanmakuPOC-Q")
             set_target_fps(GUI_FPS)
         self.g = Game(self.device, self.seed)

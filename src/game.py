@@ -125,7 +125,7 @@ class Game:
                     frame=i,
                     validate=validate,
                 )
-                if not BUILD_DL:
+                if not TRAIN_MODEL:
                     begin_drawing()
                     self.Draw(
                         l_2,
