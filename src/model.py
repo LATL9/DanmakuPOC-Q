@@ -109,13 +109,21 @@ class NNModel:
                     for i in range(pow(4, FRAMES_PER_ACTION)):
                         del self.q_table_dict[i]
 
-                    print("Frame {}/{}: ".format(f, round(TRAIN_FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
                     max_q_value = max(q_table[-1])
                     exp_outs_dec = self.to_base4(self.rng.choice([index for (index, item) in enumerate(q_table[-1]) if item == max_q_value]))
                     actual_outs = [ # actual action inputted to Game (no estimated confidence)
-                        [0 for i in range(4)]
+                        [1 if exp_outs_dec[j] == i else 0 for i in range(4)]
                         for j in range(FRAMES_PER_ACTION)
                     ]
+                    last_screen = self.g.Action_Update(actual_outs, get_screen=True)
+
+                    # don't deal with calculating exp_outs if:
+                    # - no bullet on screen (not useful training data)
+                    # - action causes player to touch bullet (bad training data)
+                    if not bullet_on_screen or max_q_value < -9e90:
+                        del exp_inps[-1]
+                        del exp_outs[-1]
+                        continue
 
                     # estimate confidence for other directions
                     for i in range(FRAMES_PER_ACTION):
@@ -137,18 +145,13 @@ class NNModel:
                                     else:
                                         exp_outs[-1][i][j] *= ACTION_THRESHOLD
                                 # confidence between min_q_value and 0 is mapped to between 0 and ACTION_THRESHOLD or 0-0.75 if choosed action
-                        actual_outs[i][exp_outs_dec[i]] = 1
 
+                    print("Frame {}/{}: ".format(f, round(TRAIN_FPS * TRAIN_TIME / FRAMES_PER_ACTION)), end='')
                     for i in range(FRAMES_PER_ACTION):
                         print(self.arrows[exp_outs_dec[i]], end='')
                     print(", Q-value {}{}".format(max_q_value, ' ' * 10), end='\r')
 
-                    last_screen = self.g.Action_Update(actual_outs, get_screen=True)
-                    if not bullet_on_screen:
-                        del exp_inps[-1]
-                        del exp_outs[-1]
-                    else:
-                        exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
+                    exp_outs[-1] = exp_outs[-1].flatten() # must be 1D to calculate loss
                 elif not TRAIN_MODEL:
                     last_screen = self.g.Action_Update(
                         self.test(torch.cat((last_screen, screen), 0), bullet_on_screen),
