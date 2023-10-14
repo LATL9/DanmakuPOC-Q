@@ -130,7 +130,7 @@ class Game:
     
     def Update(self, keys, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, frame=0, validate=False): # extra paramters used when not TRAIN_MODEL
         if not BUILD_DL:
-            if self.untouched_count < GAME_FPS * 2 + 1:
+            if self.untouched_count < GAME_FPS * 4 + 1:
                 self.untouched_count += 1
             if not TRAIN_MODEL:
                 self.keys = keys
@@ -197,7 +197,7 @@ class Game:
                 self.bullets.append(self.new_bullet(BULLET_HONE))
 
         if not BUILD_DL:
-            if self.untouched_count == GAME_FPS * 2 + 1:
+            if self.untouched_count == GAME_FPS * 4 + 1:
                 self.score += 48 // GAME_FPS
             if not TRAIN_MODEL:
                 begin_drawing()
