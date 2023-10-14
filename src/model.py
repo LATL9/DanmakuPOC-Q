@@ -174,7 +174,7 @@ class NNModel:
             results['fitness'] = self.validate() if TRAIN_MODEL else self.g.score # score by validation or model
         return results
 
-    def validate(self): # should be run if TRAIN_MODEL (+ not BUILD_DL)
+    def validate(self): # should be run if TRAIN_MODEL
         self.g = Game(self.device, self.seed)
         last_screen = self.g.get_screen()
         for f in range(round(TRAIN_FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
