@@ -170,13 +170,11 @@ class NNModel:
             results['q_fitness'] = q_fitness # score by Q-learning agent
             results['exp_inps'] = exp_inps
             results['exp_outs'] = exp_outs
-        elif TRAIN_MODEL: # if training (to validate)
-            results['fitness'] = self.validate() # score by validation
+        else: # if training (to validate) or testing
+            results['fitness'] = self.validate() if TRAIN_MODEL else self.g.score # score by validation or model
             results['hits'] = self.g.collide_count[2]
             results['grazes'] = self.g.collide_count[1]
             results['nears'] = self.g.collide_count[0]
-        else: # if testing
-            results['fitness'] = self.g.score # score by model
         return results
 
     def validate(self): # should be run if TRAIN_MODEL
