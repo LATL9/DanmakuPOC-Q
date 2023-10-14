@@ -232,7 +232,7 @@ class Game:
         
         self.player.Draw()
         for i in range(len(self.bullets)): self.bullets[i].Draw()
-        #for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
+        for i in range(len(self.collides)): self.bullets[self.collides[i]].Draw(True)
 
         # minimap
         s = self.get_screen()
@@ -276,8 +276,8 @@ class Game:
 
         draw_text(str(self.score), 8, 32, 32, WHITE)
 
-        #for i in range(len(self.collide_count)):
-        #    draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
+        for i in range(len(self.collide_count)):
+            draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
 
         k = {
             0: "U",
