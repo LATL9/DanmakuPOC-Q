@@ -28,9 +28,9 @@ class Game:
             self.player = Player(WIDTH // 2, HEIGHT // 2 if BULLET_TYPE == BULLET_HONE else HEIGHT - 64 , PLAYER_SIZE)
         if not BUILD_DL:
             self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (GAME_FPS * 2.5 - 1) = not touching, GAME_FPS * 2.5 = end and point reward
+            self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
         if not TRAIN_MODEL:
             self.collides = [] # shows collisions (used for demonstration, not in training)
-            self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
 
         if frame_count:
             self.frame_count = frame_count if BULLET_TYPE == BULLET_HONE else GAME_FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
@@ -45,7 +45,7 @@ class Game:
         g.bullets = [self.bullets[i].copy() for i in range(len(self.bullets))]
         g.score = self.score
         g.frame_count = self.frame_count
-        if not TRAIN_MODEL:
+        if not BUILD_DL:
             g.collide_count = self.collide_count
         return g
 
@@ -69,7 +69,7 @@ class Game:
             ) for i in range(len(self.bullets))],
             self.score,
             self.frame_count,
-            False if TRAIN_MODEL else self.collide_count
+            False if BUILD_DL else self.collide_count
         )
 
     def Reset(self, seed):
@@ -125,20 +125,6 @@ class Game:
                     frame=i,
                     validate=validate,
                 )
-                if not TRAIN_MODEL:
-                    begin_drawing()
-                    self.Draw(
-                        l_2,
-                        l_3,
-                        l_4,
-                        l_5,
-                        l_6,
-                        l_7,
-                        key,
-                        i
-                    )
-                    draw_fps(8, 8)
-                    end_drawing()
 
         return last_screen if get_screen else self.score
     
@@ -177,9 +163,10 @@ class Game:
                 if self.colliding[0] == False:
                     self.colliding[0] = True
                     self.score -= 48 // GAME_FPS
-                if not TRAIN_MODEL:
-                    self.collides.append(i);
+                if not BUILD_DL:
                     self.collide_count[0] += 1
+                    if not TRAIN_MODEL:
+                        self.collides.append(i);
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width *  ((GRAZE_SIZE - 1) // 2)),
                 self.player.pos.y - round(self.player.pos.height *  ((GRAZE_SIZE - 1) // 2)),
@@ -189,17 +176,19 @@ class Game:
                 if self.colliding[1] == False:
                     self.colliding[1] = True
                     self.score -= 192 // GAME_FPS
-                if not TRAIN_MODEL:
-                    self.collides.append(i);
+                if not BUILD_DL:
                     self.collide_count[1] += 1
+                    if not TRAIN_MODEL:
+                        self.collides.append(i);
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 if self.colliding[2] == False:
                     self.colliding[2] = True
                     self.score -= 9e99 if BUILD_DL else 768 // GAME_FPS # high penalty prevents q-learning agent from even considering touching a bullet
-                if not TRAIN_MODEL:
+                if not BUILD_DL:
                     self.untouched_count = 0 # reset "untouched" count (bullet hits player)
-                    self.collides.append(i);
                     self.collide_count[2] += 1
+                    if not TRAIN_MODEL:
+                        self.collides.append(i);
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
@@ -287,7 +276,7 @@ class Game:
         }
         for i in k:
             p = round(max(min(float(pred[i]), 1), -1) * 96)
-            if float(pred[i]) > 0.5:
+            if float(self.keys[i]) > ACTION_THRESHOLD:
                 col_text = Color( 0, 255, 0, 192 )
                 col_rect = Color( 0, 255, 0, 192 )
                 draw_rectangle(24 + i * 32, 684 - p, 24, p, col_rect)

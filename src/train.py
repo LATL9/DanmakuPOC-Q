@@ -72,7 +72,7 @@ if __name__ == '__main__':
     except FileNotFoundError:
         epoch = 0
         log = open("log.csv", 'w')
-        log.write("Time, Seed, Epoch, Fitness, Error\n") # header
+        log.write("Time, Seed, Epoch, Error, Fitness, Hits, Grazes, Nears\n") # header
 
     # TODO: figure out how to calculate number of batches given a DataLoader
     for i, (inputs, targets) in enumerate(training_loader):
@@ -90,10 +90,13 @@ if __name__ == '__main__':
         fitness = results['fitness']
 
         if not TRAIN_MODEL:
-            print("Epoch {}: Fitness = {}, Error = {}".format(
+            print("Epoch {}: Error = {}, Fitness = {}, Hits = {}, Grazes = {}, Nears = {}".format(
                 epoch,
+                error,
                 fitness,
-                error
+                results['hits'],
+                results['grazes'],
+                results['nears']
             ))
             exit() # if testing, exit now
 
@@ -109,12 +112,15 @@ if __name__ == '__main__':
             print("Batch {}".format(i), end='\r')
         error /= size + 1
 
-        log.write("{}, {}, {}, {}, {}\n".format(
+        log.write("{}, {}, {}, {}, {}, {}, {}, {}\n".format(
             time.asctime(),
             seed, # used for replays
             epoch,
+            error, 
             fitness,
-            error 
+            results['hits'],
+            results['grazes'],
+            results['nears']
         ))
         log.flush()
 
@@ -124,8 +130,11 @@ if __name__ == '__main__':
             torch.save(checkpoint, "models/model-{}.pt".format(epoch))
             os.system("cp models/model-{}.pt models/model.pt".format(epoch)) # model.pt = most recent
 
-        print("Epoch {}: Fitness = {}, Error = {}".format(
+        print("Epoch {}: Error = {}, Fitness = {}, Hits = {}, Grazes = {}, Nears = {}".format(
             epoch,
+            error,
             fitness,
-            error
+            results['hits'],
+            results['grazes'],
+            results['nears']
         ))
