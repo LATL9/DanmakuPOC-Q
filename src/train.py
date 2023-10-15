@@ -20,7 +20,7 @@ def test(device, seed, _model): # _ prevents naming conflict
     return fitness
 
 if __name__ == '__main__':
-    device = torch.device("cpu")
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     torch.set_num_threads(NUM_PROCESSES)
     model = nn.Sequential(
         nn.ConstantPad2d(7, 1),
