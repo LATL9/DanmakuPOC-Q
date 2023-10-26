@@ -31,4 +31,4 @@ BULLET_TYPE = BULLET_HONE # current type
 ACTION_THRESHOLD = 0.25
 DISCOUNT_RATE = 0.9
 FRAMES_PER_ACTION = 3 # must be > 1, otherwise code in train() in Model will break
-LEARNING_RATE = 1e-5
+LEARNING_RATE = 1e-4

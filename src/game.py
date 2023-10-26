@@ -12,8 +12,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import time # REMOVE ZZZZZZZZ
-
 class Game:
     def __init__(self, device, seed, player=False, bullets=False, score=0, frame_count=False, collide_count=False):
         self.device = device
