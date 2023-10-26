@@ -40,7 +40,7 @@ if __name__ == '__main__':
         nn.LeakyReLU(),
         nn.Linear(768, 64),
         nn.LeakyReLU(),
-        nn.Linear(64, 4 * FRAMES_PER_ACTION),
+        nn.Linear(64, 5 * FRAMES_PER_ACTION),
         nn.Sigmoid(),
         nn.ReLU()
     ).to(device)
