@@ -82,8 +82,9 @@ class Game:
         else:
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
-
-    def Sim_Update(self, action): # simulates an update and returns change in fitnesss
+    
+    # stop_bullet_collision = return low score (-9e99) if bullet collides with player at any point
+    def Sim_Update(self, action, stop_bullet_collision=False): # simulates an update and returns change in fitnesss
         # create copies of changed variables in Update() to rollback once Sim_Update() finishes
         _rng = copy.copy(self.rng)
         _player = self.player.copy()
@@ -91,7 +92,7 @@ class Game:
         _score = self.score
         _frame_count = self.frame_count
 
-        fitness = self.Action_Update(action)
+        fitness = self.Action_Update(action, stop_bullet_collision=stop_bullet_collision)
 
         # restore copies of changed variables
         self.rng = copy.copy(_rng)
@@ -100,8 +101,10 @@ class Game:
         self.score = _score
         self.frame_count = _frame_count
         return fitness
-
-    def Action_Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, get_screen=False, validate=False): # action is FRAME_PER_ACTION frames of input; get_screen if True will also return the screen before the last frame (used for expected inputs in Model)
+    
+    # action is FRAME_PER_ACTION frames of input
+    # get_screen returns the screen before the last frame (used for expected inputs in Model)
+    def Action_Update(self, action, l_2=0, l_3=0, l_4=0, l_5=0, l_6=0, l_7=0, pred=0, stop_bullet_collision=False, get_screen=False, validate=False):
         i = -1
         for key in action:
             i += 1
@@ -123,6 +126,8 @@ class Game:
                     frame=i,
                     validate=validate,
                 )
+            #if stop_bullet_collision and self.score <= -9e90: # if bullet collides with player
+            #    return -9e99 # low score would've been returned even if Action_Update() finished
 
         return last_screen if get_screen else self.score
     

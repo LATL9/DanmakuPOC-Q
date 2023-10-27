@@ -2,36 +2,45 @@ from common import *
 
 from game import *
 
+import time
+
 def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in decimal; end of range of actions is exclusive
     for f in range(round(TRAIN_FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
         while f == len(game_dict):
             pass # wait until current frame is ready
+        # each number = index for action (0 = up, 1 = down, 2 = left, 3 = right, 4 = do nothing)
+        ideal_action = False # whether or not an action with a Q-value > -9e90 (player doesn't hit bullet) has been found
         i = index
         action = start.copy() # current action
-        # each number = index for action (0 = up, 1 = down, 2 = left, 3 = right, 4 = do nothing)
         g = Game(*game_dict[f]) # get current frame of game from train()
+        q_values = {}
 
         while action != end:
             # new instance of Game means Update() can be run once for action and Sim_Update() for action_new
             _g = g.copy()
-            q_value = _g.Action_Update(action) - g.score
+            q_value = _g.Action_Update(action, stop_bullet_collision=ideal_action) - g.score
             fitness = _g.score
-            action_new = [0 for j in range(FRAMES_PER_ACTION)] # current action for state'
-            max_q_value = -9e99
+            if ideal_action and q_value <= -9e90:
+                q_values[i] = -9e99 # not actual Q-value, but would be ignored for low value anyways
+            else:
+                action_new = [0 for j in range(FRAMES_PER_ACTION)] # current action for state'
+                max_q_value = -9e99
 
-            while action_new[FRAMES_PER_ACTION - 1] != 5:
-                max_q_value = max(max_q_value, _g.Sim_Update(action_new) - fitness)
+                while action_new[-1] != 5:
+                    max_q_value = max(max_q_value, _g.Sim_Update(action_new, stop_bullet_collision=True) - fitness)
 
-                action_new[0] += 1
-                for j in range(FRAMES_PER_ACTION - 1):
-                    if action_new[j] == 5:
-                        action_new[j] = 0
-                        action_new[j + 1] += 1
-                    else:
-                        break
+                    action_new[0] += 1
+                    for j in range(FRAMES_PER_ACTION - 1):
+                        if action_new[j] == 5:
+                            action_new[j] = 0
+                            action_new[j + 1] += 1
+                        else:
+                            break
 
-            q_value += DISCOUNT_RATE * max_q_value # reward and q-value are the same at this point, so they're ommited from equation as they cancel each other out
-            q_table_dict[i] = q_value # write q_value to static dictionary
+                q_value += DISCOUNT_RATE * max_q_value # reward and q-value are the same at this point, so they're ommited from equation as they cancel each other out
+                q_values[i] = q_value
+                if not ideal_action and q_value > -9e90:
+                    ideal_action = True # an "ideal" action (see instantiation of ideal_action) has been found
 
             i += 1
             action[0] += 1
@@ -41,6 +50,7 @@ def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in
                     action[j + 1] += 1
                 else:
                     break
+        q_table_dict[index] = q_values.copy() # write Q-values to static dictionary
 
 class NNModel:
     def __init__(self, device, seed, model=-1):
@@ -104,13 +114,18 @@ class NNModel:
                 if BUILD_DL:
                     exp_inps.append(torch.cat((last_screen, screen), 0))
                     exp_outs.append(torch.zeros(FRAMES_PER_ACTION, 4).to(self.device))
-
+                    
                     self.game_dict[f] = self.g.export() # processes will start once next instance of Game() is available
-                    while len(self.q_table_dict) != pow(5, FRAMES_PER_ACTION):
+                    while len(self.q_table_dict) != NUM_PROCESSES:
                         pass # wait until all processes are "complete" (are waiting for next frame)
-                    q_table.append(list({k: v for k, v in sorted(self.q_table_dict.items(), key=lambda item: item[0])}.values()))
-                    for i in range(pow(5, FRAMES_PER_ACTION)):
-                        del self.q_table_dict[i]
+                    
+                    temp_dict = {}
+                    for d in self.q_table_dict:
+                        for i in self.q_table_dict[d]:
+                            temp_dict[i] = self.q_table_dict[d][i]
+
+                    q_table.append(list({k: v for k, v in sorted(temp_dict.items(), key=lambda item: item[0])}.values()))
+                    self.q_table_dict.clear()
 
                     max_q_value = max(q_table[-1])
                     exp_outs_dec = self.to_base5(self.rng.choice([index for (index, item) in enumerate(q_table[-1]) if item == max_q_value]))
