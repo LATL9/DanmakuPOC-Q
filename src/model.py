@@ -4,7 +4,8 @@ from game import *
 
 def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in decimal; end of range of actions is exclusive
     for f in range(round(TRAIN_FPS * TRAIN_TIME / FRAMES_PER_ACTION)):
-        while f == len(game_dict): pass # wait until current frame is ready
+        while f == len(game_dict):
+            pass # wait until current frame is ready
         i = index
         action = start.copy() # current action
         # each number = index for action (0 = up, 1 = down, 2 = left, 3 = right, 4 = do nothing)
