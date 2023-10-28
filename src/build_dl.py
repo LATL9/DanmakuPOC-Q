@@ -51,7 +51,7 @@ if __name__ == '__main__':
         ))
         log_q.flush()
 
-        if True:
+        if not epoch % 5:
             training_loader = torch.utils.data.DataLoader(
                 training_data,
                 batch_size=16,

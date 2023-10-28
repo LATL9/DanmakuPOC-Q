@@ -122,7 +122,7 @@ if __name__ == '__main__':
         ))
         log.flush()
 
-        if True:
+        if not epoch % 10:
             checkpoint = {'epoch': epoch}
             checkpoint['model_state_dict'] = model.state_dict()
             torch.save(checkpoint, "models/model-{}.pt".format(epoch))
