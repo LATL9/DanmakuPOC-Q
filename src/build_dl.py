@@ -29,6 +29,11 @@ if __name__ == '__main__':
         log_q.write("Time, Seed, Epoch, Fitness\n") # header
         exp_inps = []
         exp_outs = []
+    
+    training_data = QDataset(
+        inps=exp_inps,
+        outs=exp_outs
+    )
 
     while True:
         epoch += 1
@@ -37,11 +42,6 @@ if __name__ == '__main__':
         results = m.train()
         exp_inps.extend(results['exp_inps'])
         exp_outs.extend(results['exp_outs'])
-
-        training_data = QDataset(
-            inps=exp_inps,
-            outs=exp_outs
-        )
 
         log_q.write("{}, {}, {}, {}\n".format(
             time.asctime(),
