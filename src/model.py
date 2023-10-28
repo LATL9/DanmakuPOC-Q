@@ -65,6 +65,26 @@ class NNModel:
             3: '→',
             4: '-'
         }
+        # rotates counterclockwise in line with PyTorch's rot90()
+        # value -> key : key -> counterclockwise rotation
+        self.rotations = [
+            { # 90 degrees
+                0: 3,
+                1: 2,
+                2: 0,
+                3: 1
+            }, { # 180 degrees
+                0: 1,
+                1: 0,
+                2: 3,
+                3: 2
+            }, { # 270 degrees
+                0: 2,
+                1: 3,
+                2: 1,
+                3: 0
+            }
+        ]
 
     def reset(self, seed):
         self.g.Reset(seed)
@@ -118,7 +138,7 @@ class NNModel:
                     self.game_dict[f] = self.g.export() # processes will start once next instance of Game() is available
                     while len(self.q_table_dict) != NUM_PROCESSES:
                         pass # wait until all processes are "complete" (are waiting for next frame)
-                    
+
                     temp_dict = {}
                     for d in self.q_table_dict:
                         for i in self.q_table_dict[d]:
@@ -183,7 +203,18 @@ class NNModel:
                         self.pred,
                         get_screen=True
                     )
-            q_fitness = self.g.score
+
+            if BUILD_DL:
+                q_fitness = self.g.score
+                # extrapolate training data by rotating 3x (4x the data)
+                for exp_inp, exp_out in zip(exp_inps[:len(exp_inps)], exp_outs[:len(exp_outs)]): # zip() faster than range() in this case
+                    for i in range(3):
+                        exp_inps.append(torch.rot90(exp_inp, i + 1, dims=[1, 2]))
+                        t = []
+                        for j in range(0, FRAMES_PER_ACTION * 4, 4):
+                            for k in range(4):
+                                t.append(exp_out[j + self.rotations[i][k]])
+                        exp_outs.append(torch.Tensor(t))
 
         if BUILD_DL:
             results['q_fitness'] = q_fitness # score by Q-learning agent
