@@ -61,7 +61,8 @@ if __name__ == '__main__':
             torch.save(training_loader, "training_loaders/training_loader-{}.pt".format(epoch))
             os.system("cp training_loaders/training_loader-{}.pt training_loaders/training_loader.pt".format(epoch)) # training_loader.pt = most recent
 
-        print("Epoch {}: Q-Learning Fitness = {}".format(
+        print("Epoch {}: Q-Learning Fitness = {}, Dataset Size = {}".format(
             epoch,
             results['q_fitness'],
+            len(exp_inps)
         ))
