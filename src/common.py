@@ -1,6 +1,6 @@
 import torch.multiprocessing as mp
 
-BUILD_DL = True
+BUILD_DL = False
 # True = use Q-learning agent to build DataLoader for training
 # False = don't and do TRAIN_MODEL instead
 TRAIN_MODEL = True
