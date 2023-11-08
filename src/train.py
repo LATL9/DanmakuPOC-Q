@@ -53,6 +53,21 @@ if __name__ == '__main__':
 
     try:
         training_loader = torch.load("training_loaders/training_loader.pt", map_location=device)
+        # use first 10% of training dataset as validation dataset
+        validation_loader = torch.utils.data.DataLoader(
+            QDataset(
+                inps=training_loader.dataset.inps[:len(training_loader.dataset.inps) // 10],
+                outs=training_loader.dataset.outs[:len(training_loader.dataset.outs) // 10]
+            ),
+            batch_size=16,
+            shuffle=True,
+            num_workers=1
+        )
+        # remove first 10% from training dataset
+        training_loader.dataset.inps = training_loader.dataset.inps[len(training_loader.dataset.inps) // 10:]
+        training_loader.dataset.outs = training_loader.dataset.outs[len(training_loader.dataset.outs) // 10:]
+        print(len(training_loader.dataset.inps))
+        print(len(validation_loader.dataset.inps))
 
     except FileNotFoundError:
         exit("no training loader found. exiting.")
@@ -72,12 +87,15 @@ if __name__ == '__main__':
     except FileNotFoundError:
         epoch = 0
         log = open("log.csv", 'w')
-        log.write("Time, Seed, Epoch, Error, Fitness, Hits, Grazes, Nears\n") # header
+        log.write("Time, Seed, Epoch, Training Error, Validation Error, Fitness, Hits, Grazes, Nears\n") # header
 
     # TODO: figure out how to calculate number of batches given a DataLoader
     for i, (inputs, targets) in enumerate(training_loader):
-        size = i
-    size += 1
+        training_loader_size = i
+    training_loader_size += 1
+    for i, (inputs, targets) in enumerate(validation_loader):
+        validation_loader_size = i
+    validation_loader_size += 1
 
     while True:
         epoch += 1
@@ -85,14 +103,14 @@ if __name__ == '__main__':
         if TRAIN_MODEL:
             seed = int(time.time())
 
-        error = 0.0
+        training_error = 0.0
+        validation_error = 0.0
         results = train()
         fitness = results['fitness']
 
         if not TRAIN_MODEL:
-            print("Epoch {}: Error = {}, Fitness = {}, Hits = {}, Grazes = {}, Nears = {}".format(
+            print("Epoch {}: Fitness = {}, Hits = {}, Grazes = {}, Nears = {}".format(
                 epoch,
-                error,
                 fitness,
                 results['hits'],
                 results['grazes'],
@@ -100,23 +118,31 @@ if __name__ == '__main__':
             ))
             exit() # if testing, exit now
 
+        # training
         for i, (inputs, targets) in enumerate(training_loader):
             optimizer.zero_grad()
             y = model(inputs)
             loss = criterion(y, targets)
-            error += float(loss)
+            training_error += float(loss)
             loss.backward()
-            #for name, param in model.named_parameters():
-            #    writer.add_histogram(name + '/grad', param.grad, global_step=epoch)
             optimizer.step()
             print("Batch {}".format(i), end='\r')
-        error /= size + 1
+        # validation (no training)
+        for i, (inputs, targets) in enumerate(validation_loader):
+            y = model(inputs)
+            loss = criterion(y, targets)
+            validation_error += float(loss)
+            print("Batch {}".format(i), end='\r')
 
-        log.write("{}, {}, {}, {}, {}, {}, {}, {}\n".format(
+        training_error /= training_loader_size
+        validation_error /= validation_loader_size
+
+        log.write("{}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(
             time.asctime(),
             seed, # used for replays
             epoch,
-            error, 
+            training_error,
+            validation_error,
             fitness,
             results['hits'],
             results['grazes'],
@@ -130,9 +156,10 @@ if __name__ == '__main__':
             torch.save(checkpoint, "models/model-{}.pt".format(epoch))
             os.system("cp models/model-{}.pt models/model.pt".format(epoch)) # model.pt = most recent
 
-        print("Epoch {}: Error = {}, Fitness = {}, Hits = {}, Grazes = {}, Nears = {}".format(
+        print("Epoch {}: Training Error = {}, Validation Error = {}, Fitness = {}, Hits = {}, Grazes = {}, Nears = {}".format(
             epoch,
-            error,
+            training_error,
+            validation_error,
             fitness,
             results['hits'],
             results['grazes'],
