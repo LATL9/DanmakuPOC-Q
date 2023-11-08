@@ -66,8 +66,6 @@ if __name__ == '__main__':
         # remove first 10% from training dataset
         training_loader.dataset.inps = training_loader.dataset.inps[len(training_loader.dataset.inps) // 10:]
         training_loader.dataset.outs = training_loader.dataset.outs[len(training_loader.dataset.outs) // 10:]
-        print(len(training_loader.dataset.inps))
-        print(len(validation_loader.dataset.inps))
 
     except FileNotFoundError:
         exit("no training loader found. exiting.")
