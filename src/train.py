@@ -36,13 +36,13 @@ if __name__ == '__main__':
         nn.LeakyReLU(),
         nn.MaxPool2d((2, 2), stride=2),
         nn.Flatten(1, 3),
-        nn.Linear(2048, 512),
+        nn.Linear(2048, 1024),
         nn.LeakyReLU(),
-        nn.Linear(512, 128),
+        nn.Linear(1024, 256),
         nn.LeakyReLU(),
-        nn.Linear(128, 32),
+        nn.Linear(256, 64),
         nn.LeakyReLU(),
-        nn.Linear(32, 4 * FRAMES_PER_ACTION),
+        nn.Linear(64, 4 * FRAMES_PER_ACTION),
         nn.Sigmoid(),
         nn.ReLU()
     ).to(device)
