@@ -7,7 +7,7 @@ from pyray import *
 import os
 import time
 
-if __name__ == '__main__':
+def main():
     device = torch.device('cpu')
     torch.set_num_threads(NUM_PROCESSES)
 

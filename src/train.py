@@ -19,7 +19,7 @@ def test(device, seed, _model): # _ prevents naming conflict
     fitness = m.train()
     return fitness
 
-if __name__ == '__main__':
+def main():
     device = torch.device('cpu')
     torch.set_num_threads(NUM_PROCESSES)
     model = nn.Sequential(
