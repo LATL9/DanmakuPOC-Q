@@ -7,10 +7,6 @@ from pyray import *
 import os
 import time
 
-#from torch.utils.tensorboard import SummaryWriter
-#
-#writer = SummaryWriter()
-
 def train():
     return test(device, seed, model)
 
