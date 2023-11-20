@@ -126,8 +126,8 @@ class Game:
                     frame=i,
                     validate=validate,
                 )
-            #if stop_bullet_collision and self.score <= -9e90: # if bullet collides with player
-            #    return -9e99 # low score would've been returned even if Action_Update() finished
+            if stop_bullet_collision and self.score <= -9e90: # if bullet collides with player
+                return -9e99 # low score would've been returned even if Action_Update() finished
 
         return last_screen if get_screen else self.score
     

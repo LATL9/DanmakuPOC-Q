@@ -1,19 +1,11 @@
 from common import *
 
 from game import *
-from model import *
+from nn_model import *
 
 from pyray import *
 import os
 import time
-
-def train():
-    return test(device, seed, model)
-
-def test(device, seed, _model): # _ prevents naming conflict
-    m = NNModel(device, seed, _model)
-    fitness = m.train()
-    return fitness
 
 def main():
     device = torch.device('cpu')
@@ -46,6 +38,9 @@ def main():
     # optimisation
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+
+    # initial random seed (overwritten if not TRAIN_MODEL)
+    seed = int(time.time())
 
     try:
         training_loader = torch.load("training_loaders/training_loader.pt", map_location=device)
@@ -83,6 +78,8 @@ def main():
         log = open("log.csv", 'w')
         log.write("Time, Seed, Epoch, Training Error, Validation Error, Fitness, Hits, Grazes, Nears\n") # header
 
+    nn_model = NNModel(device, seed, model)
+
     # TODO: figure out how to calculate number of batches given a DataLoader
     for i, (inputs, targets) in enumerate(training_loader):
         training_loader_size = i
@@ -94,18 +91,14 @@ def main():
     while True:
         epoch += 1
 
-        if TRAIN_MODEL:
-            seed = int(time.time())
-
+        results = nn_model.train()
         training_error = 0.0
         validation_error = 0.0
-        results = train()
-        fitness = results['fitness']
 
         if not TRAIN_MODEL:
             print("Epoch {}: Fitness = {}, Hits = {}, Grazes = {}, Nears = {}".format(
                 epoch,
-                fitness,
+                results['fitness'],
                 results['hits'],
                 results['grazes'],
                 results['nears']
@@ -133,18 +126,18 @@ def main():
 
         log.write("{}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(
             time.asctime(),
-            seed, # used for replays
+            nn_model.seed, # used for replays
             epoch,
             training_error,
             validation_error,
-            fitness,
+            results['fitness'],
             results['hits'],
             results['grazes'],
             results['nears']
         ))
         log.flush()
 
-        if not epoch % 10:
+        if not epoch % 1:
             checkpoint = {'epoch': epoch}
             checkpoint['model_state_dict'] = model.state_dict()
             torch.save(checkpoint, "models/model-{}.pt".format(epoch))
@@ -154,8 +147,9 @@ def main():
             epoch,
             training_error,
             validation_error,
-            fitness,
+            results['fitness'],
             results['hits'],
             results['grazes'],
             results['nears']
         ))
+        nn_model.seed = int(time.time())

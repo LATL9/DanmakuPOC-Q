@@ -1,7 +1,7 @@
 from common import *
 
 from game import *
-from model import *
+from q_agent import *
 
 from pyray import *
 import os
@@ -11,7 +11,7 @@ def main():
     device = torch.device('cpu')
     torch.set_num_threads(NUM_PROCESSES)
 
-    m = NNModel(device, int(time.time()))
+    q_agent = QAgent(device, int(time.time()))
 
     try:
         training_loader = torch.load("training_loaders/training_loader.pt", map_location=device)
@@ -37,15 +37,15 @@ def main():
 
     while True:
         epoch += 1
-        m.seed = int(time.time())
+        q_agent.seed = int(time.time())
 
-        results = m.train()
+        results = q_agent.train()
         exp_inps.extend(results['exp_inps'])
         exp_outs.extend(results['exp_outs'])
 
         log_q.write("{}, {}, {}, {}\n".format(
             time.asctime(),
-            m.seed,
+            q_agent.seed,
             epoch,
             results['q_fitness']
         ))
