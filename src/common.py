@@ -6,6 +6,7 @@ BUILD_DL = False
 TRAIN_MODEL = False
 # True = train model (must be True if BUILD_DL is True)
 # False = test model
+
 WIDTH = 800
 HEIGHT = 800
 TRAIN_FPS = 12 # internal FPS to use when training
