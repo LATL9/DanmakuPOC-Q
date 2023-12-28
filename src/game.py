@@ -13,29 +13,29 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Game:
-    def __init__(self, device, seed, player=False, bullets=False, score=0, frame_count=False, collide_count=False):
-        self.device = device
-        self.seed = seed
-        self.rng = random.Random(seed)
-        self.score = score
-        self.colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
-        self.bullets =  [Bullet(*b) for b in bullets] if bullets else []
-        if player:
-            self.player = Player(*player)
-        else:
-            self.player = Player(WIDTH // 2, HEIGHT // 2 if BULLET_TYPE == BULLET_HONE else HEIGHT - 64 , PLAYER_SIZE)
-        if not BUILD_DL:
-            self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (GAME_FPS * 2.5 - 1) = not touching, GAME_FPS * 2.5 = end and point reward
-            self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
-        if not TRAIN_MODEL:
-            self.collides = [] # shows collisions (used for demonstration, not in training)
+def __init__(self, device, seed, player=False, bullets=False, score=0, frame_count=False, collide_count=False):
+    self.device = device
+    self.seed = seed
+    self.rng = random.Random(seed)
+    self.score = score
+    self.colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
+    self.bullets =  [Bullet(*b) for b in bullets] if bullets else []
+    if player:
+        self.player = Player(*player)
+    else:
+        self.player = Player(WIDTH // 2, HEIGHT // 2 if BULLET_TYPE == BULLET_HONE else HEIGHT - 64 , PLAYER_SIZE)
+    if not BUILD_DL:
+        self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (GAME_FPS * 2.5 - 1) = not touching, GAME_FPS * 2.5 = end and point reward
+        self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
+    if not TRAIN_MODEL:
+        self.collides = [] # shows collisions (used for demonstration, not in training)
 
-        if frame_count:
-            self.frame_count = frame_count if BULLET_TYPE == BULLET_HONE else GAME_FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
-        else:
-            self.frame_count = 0
-            for i in range(NUM_BULLETS):
-                self.bullets.append(self.new_bullet(BULLET_TYPE))
+    if frame_count:
+        self.frame_count = frame_count if BULLET_TYPE == BULLET_HONE else GAME_FPS // NUM_BULLETS - 1 # used to fire bullets at a constant rate
+    else:
+        self.frame_count = 0
+        for i in range(NUM_BULLETS):
+            self.bullets.append(self.new_bullet(BULLET_TYPE))
 
     def copy(self):
         g = Game(self.device, self.seed)
@@ -47,7 +47,8 @@ class Game:
             g.collide_count = self.collide_count
         return g
 
-    # Linux (and possibly macOS) can serialise objects to use w/ multiprocessing; Windows doesn't support this, so the needed members are exported and used to create an identical Game() instance
+    # Linux (and possibly macOS) can serialise objects to use w/ multiprocessing
+    # Windows doesn't support this, so the needed members are exported and used to create an identical Game() instance
     def export(self): # get arguments to reinit object
         return (
             self.device,
