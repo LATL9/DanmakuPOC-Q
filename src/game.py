@@ -374,8 +374,10 @@ class Game:
         for i in range(len(self.bullets)):
             b_x = self.bullets[i].pos.x + self.bullets[i].pos.width / 2
             b_y = self.bullets[i].pos.y + self.bullets[i].pos.height / 2
-            if b_x - p_x >= WIDTH / -3 and b_x - p_x < WIDTH / 3 and \
-                b_y - p_y >= HEIGHT / -3 and b_y - p_y < HEIGHT / 3:
+            if b_x - p_x >= WIDTH / -3 and \
+                b_x - p_x < WIDTH / 3 and \
+                b_y - p_y >= HEIGHT / -3 and \
+                b_y - p_y < HEIGHT / 3:
                 x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
                 y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
                 for y_2 in range(-2, 3):
