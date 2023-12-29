@@ -317,7 +317,7 @@ class Game:
                 if origin_edge == 0:
                     hyp = pow(pow(adj, 2) + pow(p_y, 2), 0.5)
 
-                    b_y = BULLET_SIZE * -1 + 1
+                    b_y = 0
                     v_y = p_y * BULLET_HONE_SPEED / hyp
                 else: # 1
                     hyp = pow(pow(adj, 2) + pow(p_y - HEIGHT, 2), 0.5)
@@ -332,7 +332,7 @@ class Game:
                 if origin_edge == 2:
                     hyp = pow(pow(adj, 2) + pow(p_x, 2), 0.5)
 
-                    b_x = BULLET_SIZE * -1 + 1
+                    b_x = 0
                     v_x = p_x * BULLET_HONE_SPEED / hyp
                 else: # 3
                     hyp = pow(pow(adj, 2) + pow(p_x - WIDTH, 2), 0.5)
