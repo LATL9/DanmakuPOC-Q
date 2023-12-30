@@ -19,14 +19,16 @@ class Game:
         self.rng = random.Random(seed)
         self.score = score
         self.colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
-        self.bullets = [Bullet(*b) for b in bullets] if bullets else [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
-        self.player = Player(*player) if player else (
+        self.player = Player(*player) if player else Player(
             WIDTH // 2, HEIGHT // 2 if BULLET_TYPE == BULLET_HONE else HEIGHT - 64, PLAYER_SIZE
         )
+        self.bullets = [Bullet(*b) for b in bullets] if bullets else [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
         if not BUILD_DL:
             self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (GAME_FPS * 2.5 - 1) = not touching, GAME_FPS * 2.5 = end and point reward
             self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
         if not TRAIN_MODEL:
+            self.FEATURES = [16, 64, 128, 1024, 256, 64] # number of features per hidden layer
+            self.FEATURES_X = [] # number of features per row (for Draw())
             self.collides = [] # shows collisions (used for demonstration, not in training)
         # used to fire bullets at a constant rate
         self.frame_count = (
@@ -232,36 +234,43 @@ class Game:
                 if s[0, y, x] > 0: draw_rectangle(x * 8, y * 8, 8, 8, Color( s[0, y, x] * 255, 0, 0, 128 ))
 
         # layers
-#        for i in range(l_2.shape[0]):
-#            for y in range(l_2.shape[1]):
-#                for x in range(l_2.shape[2]):
-#                    c = round(max(min(float(l_2[i, y, x]), 1), 0) * 255)
-#                    col = Color( c, c, c, 255 )
-#                    draw_rectangle(264 + (i // 8) * 32 + x * 2, (i % 8) * 32 + y * 2, 2, 2, col)
-#        for i in range(l_3.shape[0]):
-#            for y in range(l_3.shape[1]):
-#                for x in range(l_3.shape[2]):
-#                    c = round(max(min(float(l_3[i, y, x]), 1), 0) * 255)
-#                    col = Color( c, c, c, 255 )
-#                    draw_rectangle(336 + (i // 16) * 16 + x * 2, (i % 16) * 16 + y * 2, 2, 2, col)
-#        for i in range(l_4.shape[0]):
-#            for y in range(l_4.shape[1]):
-#                for x in range(l_4.shape[2]):
-#                    c = round(max(min(float(l_4[i, y, x]), 1), 0) * 255)
-#                    col = Color( c, c, c, 255 )
-#                    draw_rectangle(408 + (i // 32) * 8 + x * 2, (i % 32) * 8 + y * 2, 2, 2, col)
-#        for y in range(l_5.shape[0]):
-#            col = Color( c, c, c, 255 )
-#            c = round(max(min(float(l_5[y]), 1), 0) * 255)
-#            draw_rectangle(480 + (y // 64) * 4, (y % 64) * 4, 4, 4, col)
-#        for y in range(l_6.shape[0]):
-#            col = Color( c, c, c, 255 )
-#            c = round(max(min(float(l_6[y]), 1), 0) * 255)
-#            draw_rectangle(552 + (y // 64) * 4, (y % 64) * 4, 4, 4, col)
-#        for y in range(l_7.shape[0]):
-#            col = Color( c, c, c, 255 )
-#            c = round(max(min(float(l_7[y]), 1), 0) * 255)
-#            draw_rectangle(576, y * 4, 4, 4, col)
+        if not self.FEATURES_X:
+            for i in range(len(self.FEATURES)):
+                self.FEATURES_X.append(self.FEATURES[i])
+                for j in range(1, self.FEATURES[i]):
+                    if not 64 % j and (self.FEATURES[i] // j) * (64 // j) <= 256:
+                        self.FEATURES_X[-1] = j
+                        break
+
+        layers = [l_2, l_3, l_4, l_5, l_6, l_7]
+        for i in range(len(layers)):
+            if len(layers[i].shape) == 1:
+                node_size = 64 // self.FEATURES_X[i]
+                offset = 264 + (i * 64)
+                for f in range(layers[i].shape[0]):
+                    c = round(max(min(float(layers[i][f]), 1), 0) * 255)
+                    draw_rectangle(
+                        offset + (f % self.FEATURES_X[i]) * node_size,
+                        (f // self.FEATURES_X[i]) * node_size,
+                        node_size,
+                        node_size,
+                        Color( c, c, c, 255)
+                    )
+            else: # len(layers[i].shape) == 3
+                feature_size = (64 // self.FEATURES_X[i])
+                node_size = feature_size // layers[i].shape[2]
+                for f in range(layers[i].shape[0]):
+                    offset = 264 + (i * 64) + (f % self.FEATURES_X[i]) * feature_size
+                    for y in range(layers[i].shape[1]):
+                        for x in range(layers[i].shape[2]):
+                            c = round(max(min(float(layers[i][f, y, x]), 1), 0) * 255)
+                            draw_rectangle(
+                                offset + x * node_size,
+                                (f // self.FEATURES_X[i]) * feature_size + y * node_size,
+                                node_size,
+                                node_size,
+                                Color( c, c, c, 255)
+                            )
 
         draw_text(str(self.score), 8, 32, 32, WHITE)
 

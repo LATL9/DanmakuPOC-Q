@@ -17,8 +17,8 @@ class NNModel:
         self.l_4 = self.model[8:12](self.l_3)
         self.l_5 = self.model[13:15](self.l_4.flatten())
         self.l_6 = self.model[15:17](self.l_5)
-        self.l_7 = self.l_6
-        y = self.model[17:](self.l_7)
+        self.l_7 = self.model[17:19](self.l_6)
+        y = self.model[19:](self.l_7)
         self.pred = [float(f) for f in y]
 
         for i in range(FRAMES_PER_ACTION):
