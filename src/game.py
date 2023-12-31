@@ -140,8 +140,6 @@ class Game:
 
         self.colliding = [False for i in range(len(self.colliding))]
 
-        ox = self.player.pos.x
-        oy = self.player.pos.y
         self.player.Update(keys)
         for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
             self.bullets[i].Update()
