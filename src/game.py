@@ -166,7 +166,7 @@ class Game:
                 if not BUILD_DL:
                     self.collide_count[0] += 1
                     if not TRAIN_MODEL:
-                        self.collides.append(i);
+                        self.collides.append(i)
             if self.is_colliding(Rectangle(
                 self.player.pos.x - round(self.player.pos.width *  ((GRAZE_SIZE - 1) // 2)),
                 self.player.pos.y - round(self.player.pos.height *  ((GRAZE_SIZE - 1) // 2)),
@@ -179,7 +179,7 @@ class Game:
                 if not BUILD_DL:
                     self.collide_count[1] += 1
                     if not TRAIN_MODEL:
-                        self.collides.append(i);
+                        self.collides.append(i)
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 if self.colliding[2] == False:
                     self.colliding[2] = True
@@ -188,7 +188,7 @@ class Game:
                     self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                     self.collide_count[2] += 1
                     if not TRAIN_MODEL:
-                        self.collides.append(i);
+                        self.collides.append(i)
 
         if BULLET_TYPE == BULLET_HONE:
             self.frame_count += 1
