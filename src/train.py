@@ -7,7 +7,7 @@ from pyray import *
 import os
 import time
 
-def main():
+def main(num_epochs=float('inf')):
     device = torch.device('cpu')
     torch.set_num_threads(NUM_PROCESSES)
     model = nn.Sequential(
@@ -88,7 +88,7 @@ def main():
         validation_loader_size = i
     validation_loader_size += 1
 
-    while True:
+    while epoch < num_epochs:
         epoch += 1
 
         results = nn_model.train()

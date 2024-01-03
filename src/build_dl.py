@@ -7,7 +7,7 @@ from pyray import *
 import os
 import time
 
-def main():
+def main(num_epochs=float('inf')):
     device = torch.device('cpu')
     torch.set_num_threads(NUM_PROCESSES)
 
@@ -35,7 +35,7 @@ def main():
         outs=exp_outs
     )
 
-    while True:
+    while epoch < num_epochs:
         epoch += 1
         q_agent.seed = int(time.time())
 
