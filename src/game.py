@@ -13,19 +13,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Game:
-    def __init__(self, device, seed, player=False, bullets=False, score=0, frame_count=False, collide_count=False):
+    def __init__(self, device, seed, player=False, bullets=False, score=0, frame_count=False, collide_count=0):
         self.device = device
         self.seed = seed
         self.rng = random.Random(seed)
         self.score = score
-        self.colliding = [False, False, False] # 0 = near player, 1 = grazing player, 2 = touching player
+        self.colliding = False
+        self.collide_count = 0
         self.player = Player(*player) if player else Player(
             WIDTH // 2, HEIGHT // 2 if BULLET_TYPE == BULLET_HONE else HEIGHT - 64, PLAYER_SIZE
         )
         self.bullets = [Bullet(*b) for b in bullets] if bullets else [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
         if not BUILD_DL:
             self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (GAME_FPS * 2.5 - 1) = not touching, GAME_FPS * 2.5 = end and point reward
-            self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
         if not TRAIN_MODEL:
             self.FEATURES = [16, 64, 128, 1024, 256, 64] # number of features per hidden layer
             self.FEATURES_X = [] # number of features per row (for Draw())
@@ -138,7 +138,7 @@ class Game:
                 self.keys = keys
                 self.collides = []
 
-        self.colliding = [False for i in range(len(self.colliding))]
+        self.colliding = False
 
         self.player.Update(keys)
         for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
@@ -153,40 +153,31 @@ class Game:
                         del self.bullets[i]
                         continue
 
+        penalty = 0
         for i in range(len(self.bullets)):
-            if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * ((TOUCH_SIZE - 1) // 2)),
-                self.player.pos.y - round(self.player.pos.height * ((TOUCH_SIZE - 1) // 2)),
-                self.player.pos.width * TOUCH_SIZE,
-                self.player.pos.height * TOUCH_SIZE),
-                self.bullets[i].pos):
-                if self.colliding[0] == False:
-                    self.colliding[0] = True
-                    self.score -= 48 // GAME_FPS
-                if not BUILD_DL:
-                    self.collide_count[0] += 1
-                    if not TRAIN_MODEL:
-                        self.collides.append(i)
-            if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width * ((GRAZE_SIZE - 1) // 2)),
-                self.player.pos.y - round(self.player.pos.height * ((GRAZE_SIZE - 1) // 2)),
-                self.player.pos.width * GRAZE_SIZE,
-                self.player.pos.height * GRAZE_SIZE),
-                self.bullets[i].pos):
-                if self.colliding[1] == False:
-                    self.colliding[1] = True
-                    self.score -= 192 // GAME_FPS
-                if not BUILD_DL:
-                    self.collide_count[1] += 1
-                    if not TRAIN_MODEL:
-                        self.collides.append(i)
+            d = math.sqrt(
+                pow(
+                    self.bullets[i].pos.x + self.bullets[i].pos.width // 2 -
+                    (self.player.pos.x + self.player.pos.width // 2),
+                    2
+                ) + 
+                pow(
+                    self.bullets[i].pos.y + self.bullets[i].pos.height // 2 -
+                    (self.player.pos.y + self.player.pos.height // 2),
+                    2
+                )
+            )
+            if d < math.sqrt(2 * pow(800/3, 2)):
+                penalty += pow(d, 2) * 1.4e-5 - d * 7.4e-3 + 1
+
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
-                if self.colliding[2] == False:
-                    self.colliding[2] = True
-                    self.score -= float('inf') if BUILD_DL else 768 // GAME_FPS # high penalty prevents q-learning agent from even considering touching a bullet
+                if self.colliding == False:
+                    self.colliding = True
+                    if BUILD_DL:
+                        self.score -= float('inf') # infinitely-high penalty prevents q-learning agent from even considering touching a bullet
                 if not BUILD_DL:
                     self.untouched_count = 0 # reset "untouched" count (bullet hits player)
-                    self.collide_count[2] += 1
+                    self.collide_count += 1
                     if not TRAIN_MODEL:
                         self.collides.append(i)
 
@@ -198,7 +189,7 @@ class Game:
 
         if not BUILD_DL:
             if self.untouched_count == GAME_FPS * 4 + 1:
-                self.score += 48 // GAME_FPS
+                penalty /= 2
             if not TRAIN_MODEL:
                 begin_drawing()
                 self.Draw(
@@ -214,10 +205,12 @@ class Game:
                 draw_fps(8, 8)
                 end_drawing()
 
+        self.score -= penalty
         return self.score
 
     def Draw(self, l_2, l_3, l_4, l_5, l_6, l_7, pred, frame):
         clear_background(BLACK)
+        draw_rectangle(0, 200, 113, 5, GREEN)
         
         self.player.Draw()
         for i in range(len(self.bullets)): self.bullets[i].Draw()
@@ -232,48 +225,47 @@ class Game:
                 if s[0, y, x] > 0: draw_rectangle(x * 8, y * 8, 8, 8, Color( s[0, y, x] * 255, 0, 0, 128 ))
 
         # layers
-        if not self.FEATURES_X:
-            for i in range(len(self.FEATURES)):
-                self.FEATURES_X.append(self.FEATURES[i])
-                for j in range(1, self.FEATURES[i]):
-                    if not 64 % j and (self.FEATURES[i] // j) * (64 // j) <= 256:
-                        self.FEATURES_X[-1] = j
-                        break
-
-        layers = [l_2, l_3, l_4, l_5, l_6, l_7]
-        for i in range(len(layers)):
-            if len(layers[i].shape) == 1:
-                node_size = 64 // self.FEATURES_X[i]
-                offset = 264 + (i * 64)
-                for f in range(layers[i].shape[0]):
-                    c = round(max(min(float(layers[i][f]), 1), 0) * 255)
-                    draw_rectangle(
-                        offset + (f % self.FEATURES_X[i]) * node_size,
-                        (f // self.FEATURES_X[i]) * node_size,
-                        node_size,
-                        node_size,
-                        Color( c, c, c, 255)
-                    )
-            else: # len(layers[i].shape) == 3
-                feature_size = (64 // self.FEATURES_X[i])
-                node_size = feature_size // layers[i].shape[2]
-                for f in range(layers[i].shape[0]):
-                    offset = 264 + (i * 64) + (f % self.FEATURES_X[i]) * feature_size
-                    for y in range(layers[i].shape[1]):
-                        for x in range(layers[i].shape[2]):
-                            c = round(max(min(float(layers[i][f, y, x]), 1), 0) * 255)
-                            draw_rectangle(
-                                offset + x * node_size,
-                                (f // self.FEATURES_X[i]) * feature_size + y * node_size,
-                                node_size,
-                                node_size,
-                                Color( c, c, c, 255)
-                            )
+#        if not self.FEATURES_X:
+#            for i in range(len(self.FEATURES)):
+#                self.FEATURES_X.append(self.FEATURES[i])
+#                for j in range(1, self.FEATURES[i]):
+#                    if not 64 % j and (self.FEATURES[i] // j) * (64 // j) <= 256:
+#                        self.FEATURES_X[-1] = j
+#                        break
+#
+#        layers = [l_2, l_3, l_4, l_5, l_6, l_7]
+#        for i in range(len(layers)):
+#            if len(layers[i].shape) == 1:
+#                node_size = 64 // self.FEATURES_X[i]
+#                offset = 264 + (i * 64)
+#                for f in range(layers[i].shape[0]):
+#                    c = round(max(min(float(layers[i][f]), 1), 0) * 255)
+#                    draw_rectangle(
+#                        offset + (f % self.FEATURES_X[i]) * node_size,
+#                        (f // self.FEATURES_X[i]) * node_size,
+#                        node_size,
+#                        node_size,
+#                        Color( c, c, c, 255)
+#                    )
+#            else: # len(layers[i].shape) == 3
+#                feature_size = (64 // self.FEATURES_X[i])
+#                node_size = feature_size // layers[i].shape[2]
+#                for f in range(layers[i].shape[0]):
+#                    offset = 264 + (i * 64) + (f % self.FEATURES_X[i]) * feature_size
+#                    for y in range(layers[i].shape[1]):
+#                        for x in range(layers[i].shape[2]):
+#                            c = round(max(min(float(layers[i][f, y, x]), 1), 0) * 255)
+#                            draw_rectangle(
+#                                offset + x * node_size,
+#                                (f // self.FEATURES_X[i]) * feature_size + y * node_size,
+#                                node_size,
+#                                node_size,
+#                                Color( c, c, c, 255)
+#                            )
 
         draw_text(str(self.score), 8, 32, 32, WHITE)
 
-        for i in range(len(self.collide_count)):
-            draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
+        draw_text(str(self.collide_count), 8, 96, 32, Color( 255, 255, 255, 128 ))
 
         k = {
             0: "U",
