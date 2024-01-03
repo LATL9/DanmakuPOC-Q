@@ -8,7 +8,7 @@ def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in
         while f == len(game_dict):
             pass # wait until current frame is ready
         # each number = index for action (0 = up, 1 = down, 2 = left, 3 = right, 4 = do nothing)
-        ideal_action = False # whether or not an action with a Q-value > -9e90 (player doesn't hit bullet) has been found
+        ideal_action = False # whether or not an action with a Q-value > -inf (player doesn't hit bullet) has been found
         i = index
         action = start.copy() # current action
         g = Game(*game_dict[f]) # get current frame of game from train()
@@ -19,11 +19,11 @@ def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in
             _g = g.copy()
             q_value = _g.Action_Update(action, stop_bullet_collision=ideal_action) - g.score
             fitness = _g.score
-            if ideal_action and q_value <= -9e90:
-                q_values[i] = -9e99 # not actual Q-value, but would be ignored for low value anyways
+            if ideal_action and q_value == float('-inf'):
+                q_values[i] = float('-inf') # not actual Q-value, but would be ignored for low value anyways
             else:
                 action_new = [0 for j in range(FRAMES_PER_ACTION)] # current action for state'
-                max_q_value = -9e99
+                max_q_value = float('-inf')
 
                 while action_new[-1] != 5:
                     max_q_value = max(max_q_value, _g.Sim_Update(action_new, stop_bullet_collision=True) - fitness)
@@ -38,7 +38,7 @@ def calc_q_value(game_dict, q_table_dict, index, start, end): # index = start in
 
                 q_value += DISCOUNT_RATE * max_q_value # reward and q-value are the same at this point, so they're ommited from equation as they cancel each other out
                 q_values[i] = q_value
-                if not ideal_action and q_value > -9e90:
+                if not ideal_action and q_value > float('-inf'):
                     ideal_action = True # an "ideal" action (see instantiation of ideal_action) has been found
 
             i += 1
@@ -100,7 +100,7 @@ class QAgent:
         jobs = []
         manager = mp.Manager()
         q_table = [] # stores q-values for actions at the actual state
-        max_q_value = -9e99 # stores max q-value for actions from state'
+        max_q_value = float('-inf') # stores max q-value for actions from state'
 
         self.game_dict = manager.dict()
         self.q_table_dict = manager.dict()
@@ -151,7 +151,7 @@ class QAgent:
             # don't deal with calculating exp_outs if:
             # - no bullet on screen (unuseful training data)
             # - action causes player to touch bullet (bad training data)
-            if not bullet_on_screen or max_q_value < -9e90:
+            if not bullet_on_screen or max_q_value < float('-inf'):
                 del exp_inps[-1]
                 del exp_outs[-1]
                 continue
@@ -159,14 +159,14 @@ class QAgent:
             # estimate confidence for other directions
             for i in range(FRAMES_PER_ACTION):
                 for j in range(4): # for each direction ("do nothing" direction not included)
-                    min_q_value = 9e99 # lowest q_value (excluding extremely high q_values (therefore bullet touched player))
+                    min_q_value = float('inf') # infinitely-high q_value (if unchanged, bullet touched player)
                     sum_q_value = 0 # total q_value (also excluding high q_values)
                     for k in range(j, len(q_table[-1]), pow(5, i + 1)):
                         for l in range(k, k + pow(5, i)):
-                            if q_table[-1][l] > -9e90:
+                            if q_table[-1][l] > float('-inf'):
                                 min_q_value = min(min_q_value, q_table[-1][l])
                                 sum_q_value += q_table[-1][l]
-                    if min_q_value != 9e99: # if equal, all ways of moving in direction at frame cause bullet to touch player; confidence should be 0
+                    if min_q_value != float('inf'): # if equal, all ways of moving in direction at frame cause bullet to touch player; confidence should be 0
                         if min_q_value == 0: # division by zero
                             exp_outs[-1][i][j] = 0.75 if j == exp_outs_dec[i] else ACTION_THRESHOLD
                         else:

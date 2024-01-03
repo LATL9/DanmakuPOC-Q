@@ -82,7 +82,7 @@ class Game:
             for i in range(NUM_BULLETS):
                 self.bullets.append(self.new_bullet(BULLET_TYPE))
     
-    # stop_bullet_collision = return low score (-9e99) if bullet collides with player at any point
+    # stop_bullet_collision = return low score (-inf) if bullet collides with player at any point
     def Sim_Update(self, action, stop_bullet_collision=False): # simulates an update and returns change in fitnesss
         # create copies of changed variables in Update() to rollback once Sim_Update() finishes
         _rng = copy.copy(self.rng)
@@ -125,8 +125,8 @@ class Game:
                     frame=i,
                     validate=validate,
                 )
-            if stop_bullet_collision and self.score <= -9e90: # if bullet collides with player
-                return -9e99 # low score would've been returned even if Action_Update() finished
+            if stop_bullet_collision and self.score <= float('-inf'): # if bullet collides with player
+                return float('-inf') # low score would've been returned even if Action_Update() finished
 
         return last_screen if get_screen else self.score
     
@@ -168,8 +168,8 @@ class Game:
                     if not TRAIN_MODEL:
                         self.collides.append(i)
             if self.is_colliding(Rectangle(
-                self.player.pos.x - round(self.player.pos.width *  ((GRAZE_SIZE - 1) // 2)),
-                self.player.pos.y - round(self.player.pos.height *  ((GRAZE_SIZE - 1) // 2)),
+                self.player.pos.x - round(self.player.pos.width * ((GRAZE_SIZE - 1) // 2)),
+                self.player.pos.y - round(self.player.pos.height * ((GRAZE_SIZE - 1) // 2)),
                 self.player.pos.width * GRAZE_SIZE,
                 self.player.pos.height * GRAZE_SIZE),
                 self.bullets[i].pos):
@@ -183,7 +183,7 @@ class Game:
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 if self.colliding[2] == False:
                     self.colliding[2] = True
-                    self.score -= 9e99 if BUILD_DL else 768 // GAME_FPS # high penalty prevents q-learning agent from even considering touching a bullet
+                    self.score -= float('inf') if BUILD_DL else 768 // GAME_FPS # high penalty prevents q-learning agent from even considering touching a bullet
                 if not BUILD_DL:
                     self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                     self.collide_count[2] += 1
