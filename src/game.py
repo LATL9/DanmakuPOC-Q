@@ -149,7 +149,7 @@ class Game:
                 self.bullets[i].pos.y >= HEIGHT:
                     if BULLET_TYPE == BULLET_RANDOM:
                         self.bullets[i] = self.new_bullet(BULLET_TYPE)
-                    elif BULLET_TYPE == BULLET_HONE:
+                    elif BULLET_TYPE in (BULLET_HONE, BULLET_RANDOM_HONE):
                         del self.bullets[i]
                         continue
 
@@ -181,11 +181,11 @@ class Game:
                     if not TRAIN_MODEL:
                         self.collides.append(i)
 
-        if BULLET_TYPE == BULLET_HONE:
+        if BULLET_TYPE in (BULLET_HONE, BULLET_RANDOM_HONE):
             self.frame_count += 1
             if self.frame_count == GAME_FPS // NUM_BULLETS:
                 self.frame_count = 0
-                self.bullets.append(self.new_bullet(BULLET_HONE))
+                self.bullets.append(self.new_bullet(BULLET_TYPE))
 
         if not BUILD_DL:
             if self.untouched_count == GAME_FPS * 4 + 1:
@@ -348,6 +348,10 @@ class Game:
                 v_x,
                 v_y
             )
+        elif b == BULLET_RANDOM_HONE:
+            return self.new_bullet(self.rng.randint(BULLET_RANDOM, BULLET_HONE))
+        else:
+            return Bullet(0, 0, 0, 0, 0, 0)
 
     def is_colliding(self, r_1, r_2):
         if (r_1.x == r_2.x or \
