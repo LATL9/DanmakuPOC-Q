@@ -96,10 +96,12 @@ def main(num_epochs=float('inf')):
         validation_error = 0.0
 
         if not TRAIN_MODEL:
-            print("Epoch {}: Fitness = {}, Hits = {}".format(
+            print("Epoch {}: Fitness = {}, Hits = {}, Grazes = {}, Nears = {}".format(
                 epoch,
                 results['fitness'],
                 results['hits'],
+                results['grazes'],
+                results['nears']
             ))
             exit() # if testing, exit now
 
@@ -122,7 +124,8 @@ def main(num_epochs=float('inf')):
         training_error /= training_loader_size
         validation_error /= validation_loader_size
 
-        log.write("{}, {}, {}, {}, {}, {}, {}\n".format(
+
+        log.write("{}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(
             time.asctime(),
             nn_model.seed, # used for replays
             epoch,
@@ -130,6 +133,8 @@ def main(num_epochs=float('inf')):
             validation_error,
             results['fitness'],
             results['hits'],
+            results['grazes'],
+            results['nears']
         ))
         log.flush()
 
@@ -139,11 +144,13 @@ def main(num_epochs=float('inf')):
             torch.save(checkpoint, "models/model-{}.pt".format(epoch))
             os.system("cp models/model-{}.pt models/model.pt".format(epoch)) # model.pt = most recent
 
-        print("Epoch {}: Training Error = {}, Validation Error = {}, Fitness = {}, Hits = {}".format(
+        print("Epoch {}: Training Error = {}, Validation Error = {}, Fitness = {}, Hits = {}, Grazes = {}, Nears = {}".format(
             epoch,
             training_error,
             validation_error,
             results['fitness'],
             results['hits'],
+            results['grazes'],
+            results['nears']
         ))
         nn_model.seed = int(time.time())

@@ -13,19 +13,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Game:
-    def __init__(self, device, seed, player=False, bullets=False, score=0, frame_count=False, collide_count=0):
+    def __init__(self, device, seed, player=False, bullets=False, score=0, frame_count=False, collide_count=False):
         self.device = device
         self.seed = seed
         self.rng = random.Random(seed)
         self.score = score
-        self.colliding = False
-        self.collide_count = 0
+        self.colliding = [False for i in range(3)] # 0 = near player, 1 = grazing player, 2 = touching player
         self.player = Player(*player) if player else Player(
             WIDTH // 2, HEIGHT // 2 if BULLET_TYPE == BULLET_HONE else HEIGHT - 64, PLAYER_SIZE
         )
         self.bullets = [Bullet(*b) for b in bullets] if bullets else [self.new_bullet(BULLET_TYPE) for i in range(NUM_BULLETS)]
         if not BUILD_DL:
             self.untouched_count = 0 # -1 = touching bullets (any hitbox layer), 0 to (GAME_FPS * 2.5 - 1) = not touching, GAME_FPS * 2.5 = end and point reward
+            self.collide_count = collide_count if collide_count else [0 for i in range(3)] # no of frames each hitbox is touched
         if not TRAIN_MODEL:
             self.FEATURES = [16, 64, 128, 1024, 256, 64] # number of features per hidden layer
             self.FEATURES_X = [] # number of features per row (for Draw())
@@ -138,7 +138,7 @@ class Game:
                 self.keys = keys
                 self.collides = []
 
-        self.colliding = False
+        self.colliding = [False for i in range(len(self.colliding))]
 
         self.player.Update(keys)
         for i in range(len(self.bullets) - 1, -1, -1): # iterates backwards so deletion of a bullet keeps matching indexes for next iterating bullets
@@ -169,15 +169,27 @@ class Game:
             )
             if d < math.sqrt(2 * pow(800/3, 2)):
                 penalty += pow(d, 2) * 1.4e-5 - d * 7.4e-3 + 1
-
+            if not BUILD_DL:
+                for j, s in ((0, TOUCH_SIZE), (1, GRAZE_SIZE)):
+                    if self.is_colliding(Rectangle(
+                        self.player.pos.x - round(self.player.pos.width * ((s - 1) // 2)),
+                        self.player.pos.y - round(self.player.pos.height * ((s - 1) // 2)),
+                        self.player.pos.width * s,
+                        self.player.pos.height * s),
+                        self.bullets[i].pos):
+                        if self.colliding[j] == False:
+                            self.colliding[j] = True
+                        self.collide_count[j] += 1
+                        if not TRAIN_MODEL:
+                            self.collides.append(i)
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
-                if self.colliding == False:
-                    self.colliding = True
+                if self.colliding[2] == False:
+                    self.colliding[2] = True
                     if BUILD_DL:
                         self.score -= float('inf') # infinitely-high penalty prevents q-learning agent from even considering touching a bullet
                 if not BUILD_DL:
                     self.untouched_count = 0 # reset "untouched" count (bullet hits player)
-                    self.collide_count += 1
+                    self.collide_count[2] += 1
                     if not TRAIN_MODEL:
                         self.collides.append(i)
 
@@ -189,7 +201,7 @@ class Game:
 
         if not BUILD_DL:
             if self.untouched_count == GAME_FPS * 4 + 1:
-                penalty /= 2
+                penalty /= 2 # reduced penalty for player not touching a bullet
             if not TRAIN_MODEL:
                 begin_drawing()
                 self.Draw(
@@ -265,7 +277,9 @@ class Game:
 
         draw_text(str(self.score), 8, 32, 32, WHITE)
 
-        draw_text(str(self.collide_count), 8, 96, 32, Color( 255, 255, 255, 128 ))
+
+        for i in range(len(self.collide_count)):
+            draw_text(str(self.collide_count[i]), 8, 96 + i * 32, 32, Color( 255, 255, 255, 128 ))
 
         k = {
             0: "U",

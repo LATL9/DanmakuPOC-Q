@@ -35,7 +35,7 @@ def main(num_epochs=float('inf')):
         outs=exp_outs
     )
 
-    while epoch < num_epochs:
+    while epoch < num_epochs and len(exp_inps) < 1:
         epoch += 1
         q_agent.seed = int(time.time())
 

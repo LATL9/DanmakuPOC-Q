@@ -68,7 +68,9 @@ class NNModel:
 
         return {
             'fitness': self.validate() if TRAIN_MODEL else self.g.score, # score by validation or model
-            'hits': self.g.collide_count
+            'hits': self.g.collide_count[2],
+            'grazes': self.g.collide_count[1],
+            'nears': self.g.collide_count[0]
         }
 
         return model_action

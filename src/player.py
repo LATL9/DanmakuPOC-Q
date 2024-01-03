@@ -18,6 +18,21 @@ class Player:
 
     def Draw(self):
         draw_rectangle_rec(Rectangle(
+            self.pos.x - round(self.pos.width * ((TOUCH_SIZE - 1) // 2)),
+            self.pos.y - round(self.pos.height * ((TOUCH_SIZE - 1) // 2)),
+            self.pos.width * TOUCH_SIZE,
+            self.pos.height * TOUCH_SIZE),
+            DARKGRAY
+        )
+        draw_rectangle_rec(Rectangle(
+            self.pos.x - round(self.pos.width * ((GRAZE_SIZE - 1) // 2)),
+            self.pos.y - round(self.pos.height * ((GRAZE_SIZE - 1) // 2)),
+            self.pos.width * GRAZE_SIZE,
+            self.pos.height * GRAZE_SIZE),
+            LIGHTGRAY
+        )
+
+        draw_rectangle_rec(Rectangle(
                 self.pos.x + self.pos.width // 2 - (800 / 3),
                 self.pos.y + self.pos.height // 2 - (800 / 3),
                 2 * 800 / 3 ,
