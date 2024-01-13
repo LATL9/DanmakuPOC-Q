@@ -8,8 +8,9 @@ import os
 import time
 
 def main(num_epochs=float('inf')):
-    device = torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     torch.set_num_threads(NUM_PROCESSES)
+
     model = nn.Sequential(
         nn.ConstantPad2d(7, 1),
         nn.Conv2d(2, 16, kernel_size=(15, 15)),
@@ -51,8 +52,7 @@ def main(num_epochs=float('inf')):
                 outs=training_loader.dataset.outs[:len(training_loader.dataset.outs) // 10]
             ),
             batch_size=16,
-            shuffle=True,
-            num_workers=1
+            shuffle=True
         )
         # remove first 10% from training dataset
         training_loader.dataset.inps = training_loader.dataset.inps[len(training_loader.dataset.inps) // 10:]

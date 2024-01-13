@@ -8,7 +8,7 @@ import os
 import time
 
 def main(num_epochs=float('inf')):
-    device = torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     torch.set_num_threads(NUM_PROCESSES)
 
     q_agent = QAgent(device, int(time.time()))
@@ -35,7 +35,7 @@ def main(num_epochs=float('inf')):
         outs=exp_outs
     )
 
-    while epoch < num_epochs and len(exp_inps) < 1:
+    while epoch < num_epochs:
         epoch += 1
         q_agent.seed = int(time.time())
 
@@ -55,8 +55,7 @@ def main(num_epochs=float('inf')):
             training_loader = torch.utils.data.DataLoader(
                 training_data,
                 batch_size=16,
-                shuffle=True,
-                num_workers=1
+                shuffle=True
             )
             torch.save(training_loader, "training_loaders/training_loader-{}.pt".format(epoch))
             os.system("cp training_loaders/training_loader-{}.pt training_loaders/training_loader.pt".format(epoch)) # training_loader.pt = most recent
