@@ -125,7 +125,8 @@ class Game:
                     frame=i,
                     validate=validate,
                 )
-            if stop_bullet_collision and self.score <= float('-inf'): # if bullet collides with player
+            if stop_bullet_collision and self.colliding[2]: # if bullet collides with player
+                # infinitely-high penalty prevents q-learning agent from even considering a collision with a bullet
                 return float('-inf') # low score would've been returned even if Action_Update() finished
 
         return last_screen if get_screen else self.score
@@ -185,8 +186,6 @@ class Game:
             if self.is_colliding(self.player.pos, self.bullets[i].pos):
                 if self.colliding[2] == False:
                     self.colliding[2] = True
-                    if BUILD_DL:
-                        self.score -= float('inf') # infinitely-high penalty prevents q-learning agent from even considering touching a bullet
                 if not BUILD_DL:
                     self.untouched_count = 0 # reset "untouched" count (bullet hits player)
                     self.collide_count[2] += 1
