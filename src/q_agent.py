@@ -151,7 +151,7 @@ class QAgent:
             # don't deal with calculating exp_outs if:
             # - no bullet on screen (unuseful training data)
             # - action causes player to touch bullet (bad training data)
-            if not bullet_on_screen or max_q_value < float('-inf'):
+            if not bullet_on_screen or max_q_value == float('-inf'):
                 del exp_inps[-1]
                 del exp_outs[-1]
                 continue
