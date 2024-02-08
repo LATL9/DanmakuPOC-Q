@@ -51,14 +51,14 @@ def main(num_epochs=float('inf')):
         ))
         log_q.flush()
 
+        training_loader = torch.utils.data.DataLoader(
+            training_data,
+            batch_size=16,
+            shuffle=True
+        )
+        torch.save(training_loader, "training_loaders/training_loader.pt".format(epoch))
         if not epoch % 5:
-            training_loader = torch.utils.data.DataLoader(
-                training_data,
-                batch_size=16,
-                shuffle=True
-            )
-            torch.save(training_loader, "training_loaders/training_loader-{}.pt".format(epoch))
-            os.system("cp training_loaders/training_loader-{}.pt training_loaders/training_loader.pt".format(epoch)) # training_loader.pt = most recent
+            os.system("cp training_loaders/training_loader.pt training_loaders/training_loader-{}.pt".format(epoch)) # training_loader.pt = most recent
 
         print("Epoch {}: Q-Learning Fitness = {}, Dataset Size = {}".format(
             epoch,

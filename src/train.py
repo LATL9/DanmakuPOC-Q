@@ -138,11 +138,11 @@ def main(num_epochs=float('inf')):
         ))
         log.flush()
 
-        if not epoch % 1:
-            checkpoint = {'epoch': epoch}
-            checkpoint['model_state_dict'] = model.state_dict()
-            torch.save(checkpoint, "models/model-{}.pt".format(epoch))
-            os.system("cp models/model-{}.pt models/model.pt".format(epoch)) # model.pt = most recent
+        checkpoint = {'epoch': epoch}
+        checkpoint['model_state_dict'] = model.state_dict()
+        torch.save(checkpoint, "models/model.pt")
+        if not epoch % 5:
+            os.system("cp models/model.pt models/model-{}.pt".format(epoch)) # model.pt = most recent
 
         print("Epoch {}: Training Error = {}, Validation Error = {}, Fitness = {}, Hits = {}, Grazes = {}, Nears = {}".format(
             epoch,
