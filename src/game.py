@@ -155,21 +155,21 @@ class Game:
                         continue
 
         penalty = 0
+        p_x = self.player.pos.x + self.player.pos.width // 2
+        p_y = self.player.pos.y + self.player.pos.height // 2
         for i in range(len(self.bullets)):
             d = math.sqrt(
                 pow(
-                    self.bullets[i].pos.x + self.bullets[i].pos.width // 2 -
-                    (self.player.pos.x + self.player.pos.width // 2),
+                    self.bullets[i].pos.x + self.bullets[i].pos.width // 2 - p_x,
                     2
                 ) + 
                 pow(
-                    self.bullets[i].pos.y + self.bullets[i].pos.height // 2 -
-                    (self.player.pos.y + self.player.pos.height // 2),
+                    self.bullets[i].pos.y + self.bullets[i].pos.height // 2 - p_y,
                     2
                 )
             )
-            if d < math.sqrt(2 * pow(800/3, 2)):
-                penalty += pow(d, 2) * 1.4e-5 - d * 7.4e-3 + 1
+            if d < math.sqrt(2 * pow(WIDTH / 3, 2)):
+                penalty += pow(d, 2) * 1.4e-5 - d * 5e-3 + 1
             if not BUILD_DL:
                 for j, s in ((0, TOUCH_SIZE), (1, GRAZE_SIZE)):
                     if self.is_colliding(Rectangle(
@@ -221,7 +221,6 @@ class Game:
 
     def Draw(self, l_2, l_3, l_4, l_5, l_6, l_7, pred, frame):
         clear_background(BLACK)
-        draw_rectangle(0, 200, 113, 5, GREEN)
         
         self.player.Draw()
         for i in range(len(self.bullets)): self.bullets[i].Draw()
@@ -230,10 +229,14 @@ class Game:
         # minimap
         s = self.get_screen()
         draw_rectangle(0, 0, 256, 256, Color( 128, 128, 128, 128 ))
-        draw_rectangle(16 * 8, 16 * 8, 8, 8, Color( 255, 255, 255, 128 ))
+        draw_rectangle(
+            math.floor(self.player.pos.x * 256 / WIDTH) - 4,
+            math.floor(self.player.pos.y * 256 / HEIGHT) - 4,
+            8, 8, Color( 255, 255, 255, 128 )
+        )
         for y in range(32):
             for x in range(32):
-                if s[0, y, x] > 0: draw_rectangle(x * 8, y * 8, 8, 8, Color( s[0, y, x] * 255, 0, 0, 128 ))
+                if s[0, y, x] > 0: draw_rectangle(x * 8, y * 8, 8, 8, Color( 255, 0, 0, s[0, y, x] * 128 ))
 
         # layers
 #        if not self.FEATURES_X:
@@ -381,26 +384,20 @@ class Game:
         # a thhird of the dimensions of the screen around the player is used (therefore two-thirds of screen (x and y) is used)
         # centre (top-left corner of (16, 16)) is player
         s = torch.zeros(1, 32, 32).to(self.device)
-        p_x = self.player.pos.x + self.player.pos.width / 2
-        p_y = self.player.pos.y + self.player.pos.height / 2
+        p_x = self.player.pos.x + self.player.pos.width // 2
+        p_y = self.player.pos.y + self.player.pos.height // 2
         if bullet:
             bullet_on_screen = False
         
         # first dimension
         for i in range(len(self.bullets)):
-            b_x = self.bullets[i].pos.x + self.bullets[i].pos.width / 2
-            b_y = self.bullets[i].pos.y + self.bullets[i].pos.height / 2
-            if b_x - p_x >= WIDTH / -3 and \
-                b_x - p_x < WIDTH / 3 and \
-                b_y - p_y >= HEIGHT / -3 and \
-                b_y - p_y < HEIGHT / 3:
-                x = math.floor((((b_x - p_x) / (WIDTH / 3)) + 1) * 16)
-                y = math.floor((((b_y - p_y) / (HEIGHT / 3)) + 1) * 16)
-                for y_2 in range(-2, 3):
-                    for x_2 in range(-2, 3):
-                        if pow(pow(x_2, 2) + pow(y_2, 2), 0.5) <= 2.5:
-                            s[0][max(min(y + y_2, 31), 0)][max(min(x + x_2, 31), 0)] = 1
-                if bullet:
-                    bullet_on_screen = True
+            b_x = math.floor((self.bullets[i].pos.x + self.bullets[i].pos.width / 2) * 32 / WIDTH)
+            b_y = math.floor((self.bullets[i].pos.y + self.bullets[i].pos.height / 2) * 32 / HEIGHT)
+            for y_2 in range(-2, 2):
+                for x_2 in range(-2, 2):
+                    if pow(pow(x_2 + 0.5, 2) + pow(y_2 + 0.5, 2), 0.5) < 2.1:
+                        s[0][max(min(b_y + y_2, 31), 0)][max(min(b_x + x_2, 31), 0)] = 1
+            if bullet:
+                bullet_on_screen = True
 
         return (bullet_on_screen, s) if bullet else s
