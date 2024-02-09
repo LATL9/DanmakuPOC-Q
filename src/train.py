@@ -40,7 +40,7 @@ def main(num_epochs=float('inf')):
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-    # initial random seed (overwritten if not TRAIN_MODEL)
+    # initialise random seed (overwritten if not TRAIN_MODEL)
     seed = int(time.time())
 
     try:
